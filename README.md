@@ -144,7 +144,7 @@ per subagent. Active agent count shown in the status bar (`[3 agents running]`).
 - **`fetch_url` tool** — no-auth URL fetching (replaces external dependency)
 - **Plugin manifest** — six-piece package metadata set
 
-[中文文档](README.zh-CN.md) · [Project page](https://muselinn.github.io/pi-muselinn-harness/) · [pi.dev catalog](https://pi.dev/packages)
+[中文文档](README.zh-CN.md) · [Project page](https://muselinn.github.io/pi-muselinn-harness/) · [pi.dev catalog](https://pi.dev/packages/pi-muselinn-harness)
 
 ![Closed-box editor with streaming state in the top border](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
 ## Install

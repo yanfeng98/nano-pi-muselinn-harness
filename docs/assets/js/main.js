@@ -423,7 +423,7 @@
     var refNode = entries[0].h2;
     refNode.parentNode.insertBefore(verse, refNode);
 
-    verse.innerHTML = '<div class="v-web-wrap"><div class="v-nebula"></div><div class="v-stars"></div></div><div class="v-stage"></div>';
+    verse.innerHTML = '<h2 class="v-title"><span data-l="en">Explore Releases</span><span data-l="zh">探索版本</span></h2><div class="v-web-wrap"><div class="v-nebula"></div><div class="v-stars"></div></div><div class="v-stage"></div>';
 
     var starContainer = verse.querySelector('.v-stars');
     var stage = verse.querySelector('.v-stage');
@@ -435,7 +435,6 @@
     for (var k = 0; k < total; k++) {
       var t = (k + 0.5) / total;
       var angle = t * Math.PI * 4 + 0.8;
-      // Galaxy disk: concentration toward centre, wider toward edges
       var r = Math.pow(t, 0.55) * 140;
       var rx = r + (Math.random() - 0.5) * r * 0.18;
       var ry = (r + (Math.random() - 0.5) * r * 0.18) * 0.5;
@@ -448,9 +447,10 @@
       star.className = 'v-star';
       var size = 34 + (1 - t) * 24;
       var glow = 0.45 + (1 - t) * 0.55;
-      var animDelay = (Math.random() * 4).toFixed(1);
+      var twinkleDelay = (Math.random() * 4).toFixed(1);
+      var orbitDur = (5 + Math.random() * 8).toFixed(1);
 
-      star.style.cssText = 'left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px;width:' + size + 'px;height:' + size + 'px;opacity:' + glow.toFixed(2) + ';--delay:' + animDelay + 's;';
+      star.style.cssText = 'left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px;width:' + size + 'px;height:' + size + 'px;opacity:' + glow.toFixed(2) + ';--delay:' + twinkleDelay + 's;--orbit-dur:' + orbitDur + 's;';
       star.innerHTML = '<span class="v-label">' + labels[k] + '</span>';
       star.dataset.idx = k;
       starContainer.appendChild(star);
@@ -470,12 +470,10 @@
     _activeGalaxy = stars[idx].el;
     _activeGalaxy.classList.add('active');
 
-    // Move the selected grid into the stage (reliable, no innerHTML quirks)
     stage.innerHTML = '';
     var grid = entries[idx].grid;
     grid.style.display = '';
     grid.classList.remove('v-reveal');
-    // Force reflow so the animation replays on re-select
     void grid.offsetWidth;
     grid.classList.add('v-reveal');
     stage.appendChild(grid);
