@@ -520,11 +520,11 @@ tr:nth-child(2n) { background: var(--bg-soft); }
   display: none;
 }
 
-[lang="zh"] .v-title [data-l="en"] {
+[data-lang="zh"] .v-title [data-l="en"] {
   display: none;
 }
 
-[lang="zh"] .v-title [data-l="zh"] {
+[data-lang="zh"] .v-title [data-l="zh"] {
   display: inline;
 }
 
@@ -579,14 +579,14 @@ tr:nth-child(2n) { background: var(--bg-soft); }
 
 .v-star:hover,
 .v-star.active {
-  transform: translate(-50%, -50%) scale(1.55);
+  transform: translate(-50%, -50%) scale(1.55) !important;
   box-shadow: 0 0 24px var(--accent2), 0 0 60px var(--accent), 0 0 100px rgba(122,162,247,0.3);
   z-index: 5;
   animation-play-state: paused;
 }
 
 .v-star.active {
-  transform: translate(-50%, -50%) scale(1.7);
+  transform: translate(-50%, -50%) scale(1.7) !important;
 }
 
 @keyframes v-twinkle {
@@ -595,11 +595,11 @@ tr:nth-child(2n) { background: var(--bg-soft); }
 }
 
 @keyframes v-drift {
-  0%   { transform: translate(-50%, -50%) translate(0, 0); }
-  25%  { transform: translate(-50%, -50%) translate(5px, -4px); }
-  50%  { transform: translate(-50%, -50%) translate(-3px, 3px); }
-  75%  { transform: translate(-50%, -50%) translate(-6px, -2px); }
-  100% { transform: translate(-50%, -50%) translate(0, 0); }
+  0%   { translate: 0 0; }
+  25%  { translate: 5px -4px; }
+  50%  { translate: -3px 3px; }
+  75%  { translate: -6px -2px; }
+  100% { translate: 0 0; }
 }
 
 .v-label {
