@@ -692,7 +692,7 @@ export class QuestionDialogComponent extends Container {
     if (st.editingOther) return "type answer · Enter save · Esc stop editing";
     if (st.editingNote) return "type note · Enter save (empty clears) · Esc stop editing";
     const tabs = this.multi ? " · ←/→/Tab switch" : "";
-    const note = st.hasPreviewOption(st.cursor) ? " · n note" : "";
+    const note = " · n note";
     if (st.spec.multiSelect) {
       return `↑↓/jk move · 1-9/Space toggle · Enter confirm${note}${tabs} · Esc cancel`;
     }

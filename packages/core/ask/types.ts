@@ -445,11 +445,11 @@ export class AnswerState {
   }
 
   /**
-   * Open the note editor for option i (`n` key). Only preview-bearing
-   * author-defined options are eligible; returns false otherwise.
+   * Open the note editor for option i (`n` key). Any author-defined option
+   * is eligible.
    */
   startNoteEdit(i: number): boolean {
-    if (!this.hasPreviewOption(i)) return false;
+    if (i < 0 || i >= this.spec.options.length) return false;
     this.cursor = i;
     this.noteTarget = i;
     this.editingNote = true;

@@ -333,7 +333,7 @@ const n1 = new AnswerState(normalizeQuestions({
 })[0]);
 check("hasPreviewOption only for preview options",
   n1.hasPreviewOption(0) && !n1.hasPreviewOption(1) && n1.hasPreviewOption(2) && !n1.hasPreviewOption(3) /* Other */ && !n1.hasPreviewOption(4) /* Chat */);
-check("startNoteEdit rejects non-preview option", n1.startNoteEdit(1) === false && n1.editingNote === false);
+check("startNoteEdit opens on any option", n1.startNoteEdit(1) === true && n1.editingNote === true && n1.noteTarget === 1);
 check("startNoteEdit opens editor", n1.startNoteEdit(0) === true && n1.editingNote === true && n1.noteTarget === 0 && n1.cursor === 0);
 check("commitNote stores text", (n1.commitNote("  looks risky  "), n1.notes.get(0) === "looks risky" && n1.editingNote === false && n1.noteTarget === -1));
 check("notes on second preview option", (n1.startNoteEdit(2), n1.commitNote("prefer this"), n1.notes.get(2) === "prefer this"));
