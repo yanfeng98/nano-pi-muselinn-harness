@@ -439,25 +439,30 @@
       var t = (k + 0.5) / total;
       var angle = t * Math.PI * 4 + 0.8;
       var r = Math.pow(t, 0.55) * 140;
-      var rx = r + (Math.random() - 0.5) * r * 0.18;
-      var ry = (r + (Math.random() - 0.5) * r * 0.18) * 0.5;
-      var aOff = (Math.random() - 0.5) * 0.35;
-
+      // Deterministic golden-ratio offset — consistent across page loads
+      var phi = (k * 1.618034) % 1;
+      var rx = r + (phi - 0.5) * r * 0.15;
+      var ry = rx * 0.5;
+      var aOff = (phi - 0.5) * 0.25;
       var x = cx + Math.cos(angle + aOff) * rx;
       var y = cy + Math.sin(angle + aOff) * ry;
 
-      var star = document.createElement('div');
-      star.className = 'v-star';
+      var wrapper = document.createElement('div');
+      wrapper.className = 'v-star-wrapper';
       var size = 34 + (1 - t) * 24;
       var glow = 0.45 + (1 - t) * 0.55;
-      var twinkleDelay = (Math.random() * 4).toFixed(1);
-      var orbitDur = (5 + Math.random() * 8).toFixed(1);
+      var twinkleDelay = ((k * 0.7) % 4).toFixed(1);
+      var orbitDur = (8 + (k * 2.7) % 10).toFixed(1);
+      wrapper.style.cssText = 'left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px;--delay:' + twinkleDelay + 's;--orbit-dur:' + orbitDur + 's;';
 
-      star.style.cssText = 'left:' + x.toFixed(0) + 'px;top:' + y.toFixed(0) + 'px;width:' + size + 'px;height:' + size + 'px;opacity:' + glow.toFixed(2) + ';--delay:' + twinkleDelay + 's;--orbit-dur:' + orbitDur + 's;';
+      var star = document.createElement('div');
+      star.className = 'v-star';
+      star.style.cssText = 'width:' + size + 'px;height:' + size + 'px;opacity:' + glow.toFixed(2) + ';';
       star.innerHTML = '<span class="v-label">' + labels[k] + '</span>';
       star.dataset.idx = k;
-      starContainer.appendChild(star);
-      stars.push({ el: star, x: x, y: y, idx: k });
+      wrapper.appendChild(star);
+      starContainer.appendChild(wrapper);
+      stars.push({ el: star, wrapper: wrapper, x: x, y: y, idx: k });
 
       star.addEventListener('click', (function(idx) {
         return function() { showGalaxyVersion(idx, entries, stage, stars, beamPath, timelineDots); };
@@ -502,13 +507,15 @@
     grid.classList.add('v-reveal');
     stage.appendChild(grid);
 
-    requestAnimationFrame(function() {
+    var hadReady = beamPath.classList.contains('v-tl-ready');
+    beamPath.classList.remove('v-tl-ready');
+    if (hadReady) {
+      setTimeout(function() {
+        updateBeam(idx, stars, beamPath, timelineDots);
+      }, 350);
+    } else {
       updateBeam(idx, stars, beamPath, timelineDots);
-    });
-
-    setTimeout(function() {
-      stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }, 100);
+    }
   }
 
   function updateBeam(idx, stars, beamPath, timelineDots) {

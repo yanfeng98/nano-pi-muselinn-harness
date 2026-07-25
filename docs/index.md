@@ -57,10 +57,6 @@ title: pi-muselinn-harness
 <h2><span data-l="en">New in 0.9.10</span><span data-l="zh">0.9.10 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
-### <span data-l="en">Fishbone timeline</span><span data-l="zh">鱼骨链时间线</span>
-<span data-l="en">Horizontal timeline track with ring dots and vertical ribs between the version galaxy and cards. Click a dot to switch releases; the active one glows. SVG bezier beam arcs from the selected star to its timeline dot.</span><span data-l="zh">银河与版本卡片之间新增横向时间线，圆点标记 + 纵向肋骨连接每个版本。点击圆点切换版本，选中状态发光。SVG 贝塞尔曲线从星星连接到时间线圆点。</span>
-</div>
-<div class="card reveal" markdown="1">
 ### <span data-l="en"><code>n</code> note always visible</span><span data-l="zh"><code>n</code> 笔记常显</span>
 <span data-l="en">The ask dialog footer shows <code>· n note</code> unconditionally. Any option can carry a note, not only those with a preview — matching OMP behavior.</span><span data-l="zh">Ask 对话框底栏无条件显示 <code>· n note</code>。任意选项都可写笔记，不再限于有 preview 的选项——对齐 OMP。</span>
 </div>
@@ -75,10 +71,6 @@ title: pi-muselinn-harness
 <div class="card reveal" markdown="1">
 ### <span data-l="en">Collapsed widget phase tree</span><span data-l="zh">折叠 widget 阶段树</span>
 <span data-l="en">Default collapsed view now shows roman-numeral phase headers with active tasks only — no longer a flat list.</span><span data-l="zh">默认折叠视图现在显示罗马数字阶段标头+仅进行中任务——不再是无结构的平铺列表。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Pages mobile & box-style fix</span><span data-l="zh">Pages 手机端 & box 样式修复</span>
-<span data-l="en">Terminal box now uses dynamic CSS <code>border</code> instead of hardcoded Unicode box-drawing characters. Mobile layout fixed: sticky terminal with scene switching, <code>aspect-ratio: 4/3</code> adapted for small screens.</span><span data-l="zh">终端框用动态 CSS <code>border</code> 替代硬编码 Unicode 绘框字符。手机端布局修复：sticky 终端随段落切换场景，<code>aspect-ratio: 4/3</code> 适配小屏。</span>
 </div>
 <div class="card reveal" markdown="1">
 ### <span data-l="en">Schema & build fixes</span><span data-l="zh">Schema 与构建修复</span>
