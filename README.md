@@ -6,14 +6,10 @@
 
 > **Development focus:** main-line development happens in **MusePi** (the Pi fork) — see [MusePi-PLAN.md](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/MusePi-PLAN.md). This extension stays maintained: bug fixes, Pi compatibility updates, and new features that fit the extension form. Compatible with pi 0.81.x–0.82.x on macOS, ubuntu, and windows; Node 22/24, CI-tested on ubuntu + windows.
 
-### What's new in 0.9.9
+### What's new in 0.9.10
 
-**Final polish before release:**
-- **No keyboard shortcut for toggle** — `alt+t`/`opt+t` removed (Windows SSH misinterprets bare `t` as `alt+t`); use `/todo toggle` instead
-- **Widget default collapsed view** — phase-structured tree with roman numerals, shows only incomplete tasks; `alt+t` → `/todo toggle`
-- **Pages mobile & box-style fix** — terminal box uses dynamic CSS `border` instead of hardcoded Unicode box-drawing characters; mobile layout: sticky terminal with scene switching, `aspect-ratio: 4/3` adapted for small screens
-- **Schema fix** — `notes` field properly nested under `parameters.properties` (was inside `items`), `add_notes` now works
-- **Build fix** — stray `}` at line 335 removed, extension loads cleanly
+- **Fishbone timeline** — Horizontal timeline track with ring dots and vertical ribs connects the version galaxy to the cards below. Active version highlighted with glow; clicking a dot switches releases. SVG bezier beam arcs from the selected star to its dot.
+- **Ask dialog `n` note always visible** — Footer shows `n note` unconditionally; any option can carry a note (OMP parity).
 - All 12 test suites green
 ### What's new in 0.9.3–0.9.8
 

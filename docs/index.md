@@ -54,6 +54,18 @@ title: pi-muselinn-harness
   </div>
 </div>
 
+<h2><span data-l="en">New in 0.9.10</span><span data-l="zh">0.9.10 新功能</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Fishbone timeline</span><span data-l="zh">鱼骨链时间线</span>
+<span data-l="en">Horizontal timeline track with ring dots and vertical ribs between the version galaxy and cards. Click a dot to switch releases; the active one glows. SVG bezier beam arcs from the selected star to its timeline dot.</span><span data-l="zh">银河与版本卡片之间新增横向时间线，圆点标记 + 纵向肋骨连接每个版本。点击圆点切换版本，选中状态发光。SVG 贝塞尔曲线从星星连接到时间线圆点。</span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en"><code>n</code> note always visible</span><span data-l="zh"><code>n</code> 笔记常显</span>
+<span data-l="en">The ask dialog footer shows <code>· n note</code> unconditionally. Any option can carry a note, not only those with a preview — matching OMP behavior.</span><span data-l="zh">Ask 对话框底栏无条件显示 <code>· n note</code>。任意选项都可写笔记，不再限于有 preview 的选项——对齐 OMP。</span>
+</div>
+</div>
+
 <h2><span data-l="en">New in 0.9.9</span><span data-l="zh">0.9.9 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">

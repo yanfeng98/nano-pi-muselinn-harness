@@ -6,7 +6,11 @@ Kimi Code 风格的 Pi Agent 扩展 — Swarm + Goal + Plan + Permission + Task 
 
 > **开发重心**：主线开发在 **MusePi**（Pi fork）进行 — 见 [MusePi-PLAN.md](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/MusePi-PLAN.md)。本扩展持续维护：bug 修复、Pi 兼容更新，以及适合扩展形态的新功能也会继续加入。已验证兼容 pi 0.81.x 和 0.82.x。
 
-### 0.9.2 新功能
+### 0.9.10 新功能
+
+- **鱼骨链时间线** — 银河与卡片之间新增横向时间线，圆点 + 纵向肋骨标记每个版本，选中版本高亮发光。SVG 贝塞尔曲线从星星连接到时间线圆点，点击圆点也可切换版本。
+- **Ask 对话框 `n` 笔记常显** — 底栏无条件显示 `n note`，任意选项都可写笔记（OMP 对齐）。
+- 全部 12 个测试套件通过
 
 **Bug 修复：**
 - 修复 `Extension "command:todo" error: rt is not defined` — `index.ts` 中的 `registerTodoCommand` 需访问 `todo/index.ts` 作用域的 `rt`；已导出 `rt` 并导入

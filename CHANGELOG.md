@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.9.10
+
+### Features
+
+- **Fishbone timeline** — Horizontal timeline track with ring dots and vertical ribs
+  connects the version galaxy to the cards. Active version highlighted with glow;
+  clicking a timeline dot switches releases. SVG bezier beam arcs from the selected
+  star to its timeline dot. (`docs/assets/js/main.js`, `docs/assets/css/style.scss`)
+
+- **Ask dialog `n` note always available** — Footer now unconditionally shows
+  `n note` hint (OMP parity). `startNoteEdit` accepts any option, not only those
+  with a `preview` field. (`ask/dialog.ts`, `packages/core/ask/types.ts`)
+
+
 ## 0.9.0
 
 ### Features

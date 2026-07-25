@@ -423,13 +423,16 @@
     var refNode = entries[0].h2;
     refNode.parentNode.insertBefore(verse, refNode);
 
-    verse.innerHTML = '<h2 class="v-title"><span data-l="en">Explore Releases</span><span data-l="zh">探索版本</span></h2><div class="v-web-wrap"><div class="v-nebula"></div><div class="v-stars"></div></div><div class="v-stage"></div>';
+    verse.innerHTML = '<h2 class="v-title"><span data-l="en">Explore Releases</span><span data-l="zh">探索版本</span></h2><div class="v-web-wrap"><div class="v-nebula"></div><div class="v-stars"></div></div><svg class="v-tl-beam" viewBox="0 0 600 80" preserveAspectRatio="xMidYMin meet"><path class="v-tl-beam-path"/></svg><div class="v-timeline"><div class="v-tl-dots"></div></div><div class="v-stage"></div>';
 
     var starContainer = verse.querySelector('.v-stars');
+    var beamPath = verse.querySelector('.v-tl-beam-path');
+    var dotsContainer = verse.querySelector('.v-tl-dots');
     var stage = verse.querySelector('.v-stage');
 
     var W = 600, H = 320, cx = W/2, cy = H/2;
     var stars = [];
+    var timelineDots = [];
     var total = entries.length;
 
     for (var k = 0; k < total; k++) {
@@ -457,18 +460,39 @@
       stars.push({ el: star, x: x, y: y, idx: k });
 
       star.addEventListener('click', (function(idx) {
-        return function() { showGalaxyVersion(idx, entries, stage, stars); };
+        return function() { showGalaxyVersion(idx, entries, stage, stars, beamPath, timelineDots); };
       })(k));
+
+      var dot = document.createElement('button');
+      dot.className = 'v-tl-dot';
+      dot.dataset.idx = k;
+      dot.innerHTML = '<svg class="v-tl-rib" viewBox="0 0 2 40"><line x1="1" y1="40" x2="1" y2="40"/></svg><span class="v-tl-ring"></span><span class="v-tl-label">' + labels[k] + '</span>';
+      dot.addEventListener('click', (function(idx) {
+        return function() { showGalaxyVersion(idx, entries, stage, stars, beamPath, timelineDots); };
+      })(k));
+      dotsContainer.appendChild(dot);
+      timelineDots.push(dot);
     }
 
-    showGalaxyVersion(0, entries, stage, stars);
+    showGalaxyVersion(0, entries, stage, stars, beamPath, timelineDots);
   }
 
   var _activeGalaxy = null;
-  function showGalaxyVersion(idx, entries, stage, stars) {
+  var _activeTlIdx = -1;
+  function showGalaxyVersion(idx, entries, stage, stars, beamPath, timelineDots) {
     if (_activeGalaxy) _activeGalaxy.classList.remove('active');
     _activeGalaxy = stars[idx].el;
     _activeGalaxy.classList.add('active');
+
+    if (_activeTlIdx >= 0) timelineDots[_activeTlIdx].classList.remove('active');
+    _activeTlIdx = idx;
+    timelineDots[idx].classList.add('active');
+
+    // Rib line grows upward
+    var allRibs = document.querySelectorAll('.v-tl-rib line');
+    for (var ri = 0; ri < allRibs.length; ri++) {
+      allRibs[ri].setAttribute('y2', ri === idx ? '0' : '40');
+    }
 
     stage.innerHTML = '';
     var grid = entries[idx].grid;
@@ -478,9 +502,29 @@
     grid.classList.add('v-reveal');
     stage.appendChild(grid);
 
+    requestAnimationFrame(function() {
+      updateBeam(idx, stars, beamPath, timelineDots);
+    });
+
     setTimeout(function() {
       stage.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 100);
+  }
+
+  function updateBeam(idx, stars, beamPath, timelineDots) {
+    var beam = beamPath.closest('svg');
+    if (!beam || beam.clientWidth === 0) return;
+    var dot = timelineDots[idx];
+    if (!dot) return;
+
+    var scale = 600 / beam.clientWidth;
+    var sx = stars[idx].x;
+    var dotRect = dot.getBoundingClientRect();
+    var beamRect = beam.getBoundingClientRect();
+    var dx = (dotRect.left + dotRect.width / 2 - beamRect.left) * scale;
+
+    beamPath.setAttribute('d', 'M ' + sx + ',0 C ' + sx + ',40 ' + dx + ',40 ' + dx + ',80');
+    beamPath.classList.add('v-tl-ready');
   }
 
   document.addEventListener('DOMContentLoaded', initVersionGalaxy);
