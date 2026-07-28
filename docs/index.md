@@ -57,8 +57,24 @@ title: pi-muselinn-harness
 <h2><span data-l="en">New in 0.9.11</span><span data-l="zh">0.9.11 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
-### <span data-l="en"><code>n</code> note always visible</span><span data-l="zh"><code>n</code> 笔记常显</span>
-<span data-l="en">The ask dialog footer shows <code>· n note</code> unconditionally. Any option can carry a note, not only those with a preview — matching OMP behavior.</span><span data-l="zh">Ask 对话框底栏无条件显示 <code>· n note</code>。任意选项都可写笔记，不再限于有 preview 的选项——对齐 OMP。</span>
+### <span data-l="en">Tool policy gate + Kimi Code alignment</span><span data-l="zh">工具门控 + Kimi Code 对齐</span>
+<span data-l="en">New <code>tool-policy/</code> module gates tool activation before the permission chain runs. Plan mode rewritten: bash is no longer blocked (follows normal permission mode), only Write/Edit outside plan file, TaskStop, and Cron mutations are blocked. Permission read-only set expanded with glob, read_media, task_list, cron_list, agent_file_list, and plan tools.</span><span data-l="zh">新增 <code>tool-policy/</code> 模块在权限链前检查工具激活状态。Plan 模式重写：bash 不再被拦截（走正常权限模式），仅拦截 Write/Edit 出 plan 文件、TaskStop 和 Cron 变更。权限只读集扩展了 glob、read_media、task_list、cron_list、agent_file_list 和 plan 工具。</span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">Swarm report includes subagent output</span><span data-l="zh">Swarm 报告包含子代理输出</span>
+<span data-l="en"><code>formatReport()</code> now attaches each subagent's full <code>outputLines</code> to the report. The model sees what subagents actually produced — Kimi Code parity.</span><span data-l="zh"><code>formatReport()</code> 现在将每个子代理的完整 <code>outputLines</code> 附加到报告中。模型可以看到子代理实际产出的内容——与 Kimi Code 对齐。</span>
+</div>
+</div>
+
+<h2><span data-l="en">New in 0.9.10</span><span data-l="zh">0.9.10 新功能</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Fishbone timeline</span><span data-l="zh">鱼骨时间线</span>
+<span data-l="en">Horizontal timeline track with ring dots and vertical ribs connects the version galaxy to the cards. Active version highlighted with glow; clicking a dot switches releases. SVG bezier beam arcs from the selected star to its dot.</span><span data-l="zh">水平时间线轨道上的圆点通过垂直肋条连接版本星系与卡片。高亮当前版本；点击圆点切换版本。SVG 贝塞尔弧线从选中星星射向其时间线圆点。</span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">n note always visible</span><span data-l="zh">n 笔记常显</span>
+<span data-l="en">Ask dialog footer shows <code>· n note</code> unconditionally. Any option can carry a note.</span><span data-l="zh">Ask 对话框底栏无条件显示 <code>· n note</code>。任意选项都可写笔记。</span>
 </div>
 </div>
 
