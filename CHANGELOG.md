@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.9.11
+
+### Fixes
+
+- **Swarm report now includes subagent output** — `formatReport()` attaches
+  each task's `outputLines` content to the report (up to 2k chars per task),
+  so the model can see what subagents actually produced, matching Kimi Code
+  behavior. (`packages/core/swarm/report.ts`)
+
+- **Tool policy gate integrated into permission chain** — `toolPolicyService`
+  checks tool activation before the 18-level policy chain runs, preventing
+  disabled tools from being executed. (`packages/core/tool-policy/`)
+
+- **Plan mode uses Kimi Code permission model** — replaced the old bash
+  read-only whitelist with the Kimi Code approach: bash is NOT blocked in
+  plan mode, only Write/Edit (outside plan file), TaskStop, and Cron mutations
+  are blocked. (`packages/core/plan/`)
+
+- **Permission read-only tool set expanded** — added `glob`, `read_media_file`,
+  `read_media`, `task_list`, `task_output`, `cron_list`, `agent_file_list`,
+  `agent_file_info`, `todo_list`, `enter_plan_mode`, `exit_plan_mode`,
+  `skill` to the auto-approved set. (`packages/core/permission/types.ts`)
+
+### Tests
+
+- All 12 test suites green (32 assertions)
+
 ## 0.9.10
 
 ### Features

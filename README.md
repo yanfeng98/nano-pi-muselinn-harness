@@ -6,6 +6,15 @@
 
 > **Development focus:** main-line development happens in **MusePi** (the Pi fork) — see [MusePi-PLAN.md](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/MusePi-PLAN.md). This extension stays maintained: bug fixes, Pi compatibility updates, and new features that fit the extension form. Compatible with pi 0.81.x–0.82.x on macOS, ubuntu, and windows; Node 22/24, CI-tested on ubuntu + windows.
 
+### What's new in 0.9.11
+
+- **Swarm report includes subagent output** — model sees what each subagent
+  produced (Kimi Code parity).
+- **Tool policy gate** — disabled tools blocked before permission chain.
+- **Plan mode Kimi Code alignment** — bash no longer blocked in plan mode;
+  only Write/Edit (outside plan file), TaskStop, Cron mutations blocked.
+- All 12 test suites green
+
 ### What's new in 0.9.10
 
 - **Fishbone timeline** — Horizontal timeline track with ring dots and vertical ribs connects the version galaxy to the cards below. Active version highlighted with glow; clicking a dot switches releases. SVG bezier beam arcs from the selected star to its dot.

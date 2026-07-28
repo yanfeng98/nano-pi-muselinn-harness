@@ -54,7 +54,7 @@ title: pi-muselinn-harness
   </div>
 </div>
 
-<h2><span data-l="en">New in 0.9.10</span><span data-l="zh">0.9.10 新功能</span></h2>
+<h2><span data-l="en">New in 0.9.11</span><span data-l="zh">0.9.11 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
 ### <span data-l="en"><code>n</code> note always visible</span><span data-l="zh"><code>n</code> 笔记常显</span>

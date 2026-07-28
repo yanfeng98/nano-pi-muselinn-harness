@@ -58,7 +58,62 @@ kimi-code 对 K3 **没有任何名字硬编码**——全部走模型元数据�
 ` thinking: high` 档位显示要跟着 effort 解析规则走；swarm 子代理可配
 per-agent effort（kimi 在 turn 边界做模型+effort 快照，整 turn 共享）。
 
-## 三、差距清单与复现优先级
+## 四、新发现（2026-07-24 第三次调研）
+
+### MusePi 对 Kimi Code 的完成度审计
+
+| Kimi Code 特性 | MusePi v0.2.8 | 位置 |
+|---------------|---------------|------|
+| 三子代理类型 | ✅ | `@musepi/core/swarm` |
+| 上下文隔离 | ✅ | 独立 `createAgentSession` |
+| 并行 + max_concurrency | ✅ | worker 池 |
+| 30 分钟超时 | ✅ | `AbortSignal.timeout` |
+| run_in_background | ✅ | `BackgroundTaskManager` |
+| 子代理 resume | ⚠️ 保守语义 | resume-guard.ts |
+| 嵌套子代理 | ❌ 明确关闭 | 安全决定 |
+| 权限继承 | ✅ | 共享策略链 |
+| AGENTS.md 层级 | ✅ | 3 级 |
+| Hooks `[[hooks]]` | ✅ | 16 事件，TOML 解析器 |
+| Skills 4 范围 | ✅+ | 扩展为 7 范围 |
+| Transcript L1-L2 | ✅ | `@musepi/transcript` |
+| Transcript L3-L4 视图 | ❌ | 未实现 |
+| LoopErrorHandler 链 | ❌ | agent-core-v2 架构级 |
+| StepRequest 批合并 | ❌ | agent-core-v2 架构级 |
+| Compaction 分割点合法性 | ❌ | 依赖 pi-core 实现 |
+| 启动斜坡调度 | ❌ | agentRunBatch.ts 参考 |
+| runAgentTurn 三段式 | ❌ | 跑 turn→蒸馏→continuation |
+
+### 架构级差异总结
+
+```
+Kimi Code:  自研 agent-core-v2 + kosong（LLM 协议） + pi-tui（vendor）
+MusePi:     pi-coding-agent（pin 上游）+ @musepi/core（纯逻辑）+ 自研渲染器
+OMP:        pi-coding-agent（深度 fork）+ Rust 原生层（pi-natives）+ TS 逻辑层
+Grok Build: 全 Rust 自研（xai-grok-shell/pager/tools）
+```
+
+MusePi 与 Kimi Code 是**镜像架构**：Kimi Code TUI 用 pi-tui 但核心自研，MusePi 核心用 pi-coding-agent 但 TUI 自研。双方互不冲突，互可借鉴。
+
+### 在 MusePi 中已解决的以前标记问题
+
+- ✅ **分 agent 模型配置**：通过 `modelRoles` 六角色系统实现（每角色独立 `provider/model[:thinkingLevel]`）
+- ✅ **clustered diff**：已移植并集成到审批面板
+- ✅ **mode-aware 输入历史**：pi-tui Editor 的 4 钩子已移植
+- ✅ **/undo**：已实现
+- ✅ **/btw**：已实现
+- ✅ **OSC 9 通知**：已实现
+- ✅ **FetchURL 工具**：已原生实现
+- ✅ **toolResultTruncation**：已实现
+- ✅ **审批面板**：已原生实现
+- ✅ **Hashline 编辑**：已实现（超越 kimi，OMP 同级）
+
+### 仍然有差距的领域
+
+1. **Transcript 视图层**：MusePi 实现了 L1（store）和 L2（幂等 ops），但 L3（四档粒度）和 L4（view）未实现。Kimi 的 transcript 包含图形化视图层。
+2. **agent-core-v2 的插件化 loop**：这是架构级差异，MusePi 策略是 pin pi-core + 外围增强，不改核心 agent loop。
+3. **Compaction 分割点合法性**：Kimi 确保不在 `tool_call/result` 对中间切分。MusePi 依赖 pi-core 的 compaction 实现。
+
+## 三、差距清单与复现优先级（原始）
 
 ### extension 阶段就能做（本轮起）
 

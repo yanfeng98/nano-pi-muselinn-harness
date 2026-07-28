@@ -187,9 +187,220 @@ Phase 4  Desktop（TUI 稳定后启动）
 - [x] **OMP 上游复查**（2026-07-21）：clone 后仅 3 commit（17.0.7 版本号/gateway id/vouch），无可吸收
 - [x] **provider extensions 评估**（用户问）：harness 模块不碰 provider，直接价值不大；其价值在生态侧（扩展可分发带 OAuth 的自定义 provider），fork 已通过 #6915 + registerProvider 改进保持兼容面
 - [x] **fallback-ask 无 UI 阻断措辞修复**（harness `e38954e` + fork `ab93674`）：block reason 明确"NOT executed"+指向权限模式，防弱模型谎报成功；harness 对 pi 0.81.0 全测试绿（401+3 断言）
-- [ ] **远期评估**（W 系列后逐个重估）：DAP 调试器（28 debug ops）、eval 双内核、/collab、mnemopi 向量记忆、advisor 后台 watchdog（轻量工具版已落地，见 07-22 进展）
-- [ ] **W10 /move 命令**（OMP 复现，小项）：会话中切换 cwd——`handleMoveCommand`→`applyCwdChange`（reset capabilities + 刷新 slash 命令状态/skills/AGENTS.md 重扫）。参照 `oh-my-pi/docs/slash-command-internals.md:156`。pi 无此命令，fork 原生加
-- [x] **W11 MusePi 独立二进制分发 + 品牌化**（2026-07-22 完成）：bin/产物名 pi→musepi（`7b897456`）、build-binaries.sh 六平台 musepi-* 归档、release.yml tag 触发 GitHub Release（`71185683`）、--version 输出 `MusePi 0.1.0`
+- [x] **MCP 核心**（L+M）：自研最小核心已实现（stdio/http + tool bridge + /mcp 6 子命令 + registry）
+- [x] **Settings 分组面板**：42 项 musepi.* 设置分为 9 组（Memory/MCP/LSP/Advisor/Model Roles/Tools/Swarm/Interface/Updates & Compat）
+- [x] **/agents 命令 + agent dashboard**：全屏浏览器（All/Bundled/User/Project 标签），per-agent 详情面板
+- [x] **Skills 统一**：七范围扫描器已在 @musepi/core，主会话与 swarm 共享
+- [x] **Extension 品牌化**：package-manager 文案与更新通道对接到 MusePi 品牌
+- [x] **/move 命令**（W10）：`packages/musepi/core/src/move.ts` 已完成
+- [x] **W11 MusePi 独立二进制分发 + 品牌化**（2026-07-22 完成）
+
+### 已完成 W 系列里程碑（v0.2.8）
+
+| 里程碑 | 功能 | 提交 |
+|--------|------|------|
+| W1 | 编辑器：kimi 4 钩子移植 + clustered diff | `8c731392` |
+| W2 | 模型角色路由（六角色 + fallback 链） | `7171f3a9` |
+| W3 | LSP 懒加载 + 诊断注入 | `75734395` |
+| W4 | Hashline 哈希锚定编辑 | `e9af490a` |
+| W5 | 记忆系统 v1（MiMo BM25） | `a540bcb0` |
+| W6 | TUI 人性化细节包 | `8a413295` |
+| W7 | 动态工具选择 | `34ad3466` |
+| W8 | Swarm worktree 隔离 | `92f9f9d3` |
+| W9 | Snapcompact 确定性压缩 | `da741ad5` |
+| W10 | /move 命令 | `move.ts` |
+| W11 | 独立二进制 + 品牌化 | `7b897456` |
+
+### 额外完成（超出原始 W 规划）
+
+| 功能 | 位置/提交 |
+|------|----------|
+| 原生 Advisor 第二模型评审 | `6b77d12b` |
+| 原生 MCP（stdio/http 全双工） | `mcp/` 包 |
+| 流式规则注入引擎 | `7f222de` |
+| Alt-screen 全屏 overlay | `5e7d98eb` |
+| 外聚会话导入（Claude/Codex） | `24e713ef` |
+| Web search 基础设施 | `2b0cf77e` |
+| 交互式设置向导 | `e1205d6a` |
+| 主题预设 + shimmer 引擎 | `1f78e26e` |
+| Auth broker（多凭证 + AES-GCM） | `9283bcdd` |
+| Agent 仪表盘 | `9283bcdd` |
+| 颜色盲模式 | `1f78e26e` |
+| OSC 9 通知 | `notify.ts` |
+| Ctrl+R 历史搜索 | `8a413295` |
+| /undo /btw | `8a413295` |
+| Snapcompact | `da741ad5` |
+| 品牌更新通道（GitHub Releases） | `619bc135` |
+
+---
+
+## 十、修订路线图（2026-07-24 更新）
+
+基于完整审计的三个版本系列的路线图：
+
+### v0.3.0 系列（现在 → 1-2 周）：Websearch 基本升级 + 品牌修复
+
+**目标**：从 pi SDK 通用 `web_search` 切换到 MusePi 自有实现，修复品牌遗留问题
+
+| 项目 | 工作量 | 文件数 | 说明 |
+|------|--------|--------|------|
+| P0: 品牌化 extension 更新通道 | 低 (0.5d) | 2-3 改 | `musepi update --extensions` 文案改 `@musepi/*` 品牌 |
+| P0: 上游 v0.82.0 cherry-pick 审核 | 低 (1d) | — | 重新评估跳过的 SQLite 存储、llama.cpp 等 |
+| P1: Websearch 自有工具 | 中 (2d) | 8 新 + 2 改 | `@musepi/core/websearch/` + 原生工具 + 提示文档 `prompts/tools/web-search.md` |
+
+---
+
+### v0.3.1 系列（1-2 周）：Settings Tab 化 + Websearch 完全体
+
+**目标**：OMP 风格统一 Tab 设置面板，Websearch 补齐到 20+ 引擎
+
+| 项目 | 工作量 | 参考规模 | 说明 |
+|------|--------|---------|------|
+| P1: Settings 面板 Tab 化 | 中-高 (4-5d) | ~1,500 行 | 扁平列表 → 10 Tab 面板（含 icons + groups） |
+| P1: Websearch 完全体 | 中 (2d) | ~400 行 | 20+ 引擎、site-aware 提取器、CLI 命令 |
+
+**Settings Tab 设计方案（10 Tab）**：
+
+| Tab | 内容 | 来源 |
+|-----|------|------|
+| Session | 模型选择、thinking level、transport | 上游 + musepi |
+| Appearance | 主题、颜色盲、编辑器样式、timing | 上游 + musepi |
+| Interaction | 自动压缩、图片、跟随模式 | 上游 |
+| Context | 压缩策略、snapcompact | musepi |
+| Memory | 记忆开关、范围、容量 | musepi |
+| Tools | Hashline、LSP、MCP、toolSelect | musepi |
+| Swarm | 隔离模式、子代理 | musepi |
+| Providers | 提供商、凭证管理 | 上游 |
+| Advanced | 超时、通知、扩展兼容 | musepi + 上游 |
+| MusePi | 剩余 musepi 特有设置 | musepi（过渡） |
+
+---
+
+### v0.4.0 系列（2-3 周）：Internal URLs 系统 + GitHub 协议
+
+**目标**：建立 OMP 风格 URI scheme 系统，让 `read` 理解 `pr://`/`issue://` 等
+
+| 项目 | 工作量 | 参考规模 | 说明 |
+|------|--------|---------|------|
+| P1: Internal URLs 系统 | 中 (3-4d) | ~800 行 / 10 文件 | scheme 注册/路由 + 6 种协议处理器 |
+| P1: pr:// + issue:// 协议 | 与上面合并 | ~300 行 | gh CLI 包装，`read pr://1428` |
+| P2: skill:// + agent:// 协议 | 中 (1-2d) | ~200 行 | 扩展 scheme 覆盖 |
+
+**支持的 scheme（初期 6 种）**：
+
+| Scheme | 示例 | 依赖 |
+|--------|------|------|
+| `pr://` | `pr://owner/repo/123/diff` | gh CLI |
+| `issue://` | `issue://123?comments=0` | gh CLI |
+| `skill://` | `skill://<name>` | 内置 |
+| `agent://` | `agent://<id>/findings.0.path` | 内置 |
+| `local://` | `local://plans/myplan.md` | 已有 |
+| `conflict://` | `conflict://1` | git（后期） |
+
+---
+
+### v0.4.1 系列（2-3 周）：ACP 协议基础
+
+**目标**：支持 Agent Client Protocol，编辑器（Zed/VS Code）集成
+
+| 项目 | 工作量 | 参考规模 | 说明 |
+|------|--------|---------|------|
+| P2: ACP 模式 | 中 (3-5d) | ~1,000 行 / 7 文件 | JSON-RPC over stdio |
+
+**ACP 映射表**：
+
+| ACP 路由 | MusePi 工具 |
+|----------|------------|
+| `fs/read_text_file` | `read` |
+| `fs/write_text_file` | `write` |
+| `terminal/create + terminal/output` | `bash` |
+| `session/request_permission` | 权限审批 |
+
+---
+
+### v0.5.x 系列（远期）：深度能力
+
+| 优先级 | 项目 | 工作量 | 说明 |
+|--------|------|--------|------|
+| P2 | DAP 调试器基础 | 高 (5d+) | lldb/gdb/debugpy 协议适配，28 debug ops |
+| P2 | Browser 工具 | 中 (3-4d) | Puppeteer CDP 包装 + stealth 模式 |
+| P2 | Magic keywords | 低 (1-2d) | `ultrathink`/`orchestrate`/`workflowz` |
+| P2 | Hashline 文档 + 示例 | 低 (1d) | 用户教程 |
+| P3 | Autoresearch 模式 | 高 | OMP 的深度研究模式 |
+| P3 | 冲突解决协议 | 中 | conflict:// 3-way merge |
+| P3 | 向量记忆升级 | 中 | BM25 → SQLite 向量 |
+
+### OMP 参考规模
+
+| 模块 | OMP 文件 | OMP 行数 | MusePi 初期 |
+|------|---------|---------|-------------|
+| Web search (25 引擎) | 34 | 10,219 | ~1,000 (10 引擎) |
+| Internal URLs (14 scheme) | 21 | 4,585 | ~800 (6 scheme) |
+| ACP 模式 | 6 | 3,865 | ~1,000 (最小可行) |
+| Autoresearch | 15 | 3,973 | 暂不 |
+
+### 依赖关系图
+
+```
+v0.3.0 ─────────────→ v0.3.1 ───────→ v0.4.0 ────→ v0.4.1
+  │                       │              │            │
+  ├ Branding fix           ├ Settings     ├ Internal   ├ ACP
+  ├ Websearch 基本          │  Tab化       │  URLs      │  (依赖
+  └ Cherry-pick            │  (依赖       │  (依赖      │   Internal
+                            │   Schema)   │   read 钩子  │   URLs)
+                            └ Websearch   └ 依赖 gh    │
+                              完全体       CLI/API      │
+```
+
+### 工作量汇总
+
+| 版本 | 项目 | 工作量 | 累计 |
+|------|------|--------|------|
+| v0.3.0 | Branding + Websearch 基本 + Cherry-pick | 3.5d | 3.5d |
+| v0.3.1 | Settings Tab 化 + Websearch 完全体 | 7d | 10.5d |
+| v0.4.0 | Internal URLs 系统 | 4d | 14.5d |
+| v0.4.1 | ACP 协议基础 | 4d | 18.5d |
+| v0.5.x | DAP/Browser/Magic keywords 等 | 10d+ | 28d+ |
+
+**总计**：约 4-5 周完成 v0.3.0 → v0.4.1 核心对齐，8-10 周完成 v0.5.x 深度能力。
+
+### 明确不做（保持原始 Plan 决定）
+
+- **Rust 原生层**：除非 grep/glob/edit 成为瓶颈或编辑失败率显著上升
+- **Eval 双内核**：OMP 独有深度集成，MusePi 不追
+- **嵌套子代理**：安全风险 > 收益
+- **Alt-screen 主界面**：保持 container swap 策略，不破坏终端滚动缓冲（Grok 模式）
+- **/collab 协作**：relay 基础设施投入大，远期评估
+
+---
+
+## 十一、迁移状态
+
+| 资产 | 扩展 (pi-muselinn-harness) | Fork (MusePi) |
+|------|--------------------------|---------------|
+| Swarm | v0.9.10（适配层） | ✅ 原生集成 v0.2.8 |
+| Goal | v0.9.10（适配层） | ✅ 原生集成 |
+| Plan | v0.9.10（适配层） | ✅ 原生集成 |
+| Permission | v0.9.10（适配层） | ✅ 原生集成 |
+| Hooks | v0.9.10（适配层） | ✅ 原生集成 |
+| Skills | v0.9.10（适配层） | ✅ 原生集成 |
+| Task/Cron | v0.9.10（适配层） | ✅ 原生集成 |
+| TUI box | v0.9.10（适配层） | ✅ 原生 MusepiBoxedEditor |
+| Ask/todo | v0.9.10（适配层） | ✅ 原生集成 |
+| Hashline | ❌ | ✅ fork |
+| MCP | ❌ | ✅ fork |
+| LSP | ❌ | ✅ fork |
+| Memory | ❌ | ✅ fork |
+| Snapcompact | ❌ | ✅ fork |
+| Tool select | ❌ | ✅ fork |
+| Model roles | ❌ | ✅ fork |
+| Advisor | ❌ | ✅ fork |
+| Stream rules | ❌ | ✅ fork |
+| Auth broker | ❌ | ✅ fork |
+| Agent dashboard | ❌ | ✅ fork |
+| Alt screen | ❌ | ✅ fork |
+| Foreign sessions | ❌ | ✅ fork |
+| Web search | ❌ | ✅ fork |
 
 ---
 
