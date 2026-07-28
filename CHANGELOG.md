@@ -5,9 +5,8 @@
 ### Fixes
 
 - **Swarm report now includes subagent output** — `formatReport()` attaches
-  each task's `outputLines` content to the report (up to 2k chars per task),
-  so the model can see what subagents actually produced, matching Kimi Code
-  behavior. (`packages/core/swarm/report.ts`)
+  each task's full `outputLines` content to the report (Kimi Code parity),
+  so the model sees what subagents actually produced. (`packages/core/swarm/report.ts`)
 
 - **Tool policy gate integrated into permission chain** — `toolPolicyService`
   checks tool activation before the 18-level policy chain runs, preventing

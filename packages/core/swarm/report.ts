@@ -5,7 +5,7 @@
 import type { SwarmState } from "./types.ts";
 import { fmtDuration, fmtTokens, fmtCost } from "./helpers.ts";
 
-export function formatReport(state: SwarmState, maxOutputCharsPerTask = 2000): string {
+export function formatReport(state: SwarmState): string {
   const lines = [
     `# Swarm Report: ${state.name}`,
     "",
@@ -39,20 +39,16 @@ export function formatReport(state: SwarmState, maxOutputCharsPerTask = 2000): s
     );
     if (task.error) lines.push(`- **Error:** ${task.error}`);
 
-    // Include subagent output content (Kimi Code-style: full response attaches to result)
+    // Kimi Code-style: attach subagent output to report (full response)
+    // outputLines is already capped by MAX_OUTPUT_LINES in subagent.ts.
     if (task.outputLines && task.outputLines.length > 0) {
       const output = task.outputLines.join("\n").trim();
       if (output) {
-        const truncated =
-          output.length > maxOutputCharsPerTask
-            ? output.slice(0, maxOutputCharsPerTask) +
-              `\n\n_[output truncated at ${maxOutputCharsPerTask} chars]_`
-            : output;
         lines.push("");
         lines.push("  **Output:**");
         lines.push("");
         lines.push("  ```");
-        lines.push(...truncated.split("\n").map((l) => `  ${l}`));
+        lines.push(...output.split("\n").map((l) => `  ${l}`));
         lines.push("  ```");
       }
     }
