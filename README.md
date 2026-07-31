@@ -52,8 +52,7 @@ Compatible with pi 0.81.x–0.83.x on macOS, ubuntu, and windows; Node 22/24, CI
 
 ### What's new in 0.9.10
 
-- **Fishbone timeline** — Horizontal timeline track with ring dots and vertical ribs connects the version galaxy to the cards below. Active version highlighted with glow; clicking a dot switches releases. SVG bezier beam arcs from the selected star to its dot.
-- **Ask dialog `n` note always visible** — Footer shows `n note` unconditionally; any option can carry a note (OMP parity).
+- **Ask dialog `n` note always visible** — Footer shows `· n note` unconditionally; any option can carry a note (OMP parity).
 - All 12 test suites green
 ### What's new in 0.9.3–0.9.8
 
