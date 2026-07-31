@@ -4,7 +4,42 @@
 
 **Kimi Code-style agent orchestration harness for the [Pi coding agent](https://pi.dev)** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI, an eleven-module architecture that builds the features Pi deliberately skips (sub-agents, plan mode, todo, …) and aligns them with Kimi Code's subsystem behavior.
 
-> **Development focus:** main-line development happens in **MusePi** (the Pi fork) — see [MusePi-PLAN.md](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/MusePi-PLAN.md). This extension stays maintained: bug fixes, Pi compatibility updates, and new features that fit the extension form. Compatible with pi 0.81.x–0.82.x on macOS, ubuntu, and windows; Node 22/24, CI-tested on ubuntu + windows.
+Compatible with pi 0.81.x–0.83.x on macOS, ubuntu, and windows; Node 22/24, CI-tested on ubuntu + windows.
+
+### What's new in 0.9.13
+
+**Plan mode Kimi Code full alignment:**
+- Plan injection rewritten to match Kimi Code's `plan-mode.ts` wording (full + sparse variants).
+- `enter_plan_mode`, `exit_plan_mode`, and plan-file writes auto-approved (skip permission chain).
+- Per-tool deny messages: TaskStop, CronCreate, CronDelete get specific reasons in plan mode.
+- `isPlanFilePath()` shared helper for consistent plan-file path matching.
+- Plan approval panel shows full file content (removed 500-char truncation).
+
+**Permission dialog UX:**
+- "Deny with reason" input: Esc now returns to the 4 options instead of ending the flow.
+- Looped dialog matches the plan approval panel's Revise pattern.
+
+**Subagent profile system:**
+- New `packages/core/profile/` with CODER / EXPLORE / PLAN profiles.
+- Tool permissions aligned with Kimi Code YAML definitions (bash in explore, no write in plan).
+- Profiles injected via `buildProfileTools()` + `createSubagentResourceLoader()`.
+
+**Preview box fix:**
+- Trimmed Markdown trailing whitespace so box borders don't exceed terminal width.
+- Accounted for pi-tui `Text` component's `paddingX=1` in stacked layout.
+
+**Misc:**
+- Replaced `theme.fg("info", ...)` with `theme.fg("accent", ...)` ("info" color didn't exist).
+- `hasAnyPreviewOption()`: "n note" hint only shows when an option has a preview.
+- Questionnaire arrow-key tab switching uses `matchesKey()` (Kitty protocol compatible).
+- All 19 test suites green.
+
+### What's new in 0.9.12
+
+- Made `resources_discover` handler async and added timing.
+- Wrapped `restoreTodos`, `bindTodoSession`, `refreshWidget`, and `loadPlugins` in try/catch.
+- Removed unused `VisibleTodos` / `selectVisibleTodos` dead code (78 lines).
+- Cleaned up MusePi fork references from README and docs.
 
 ### What's new in 0.9.11
 
@@ -318,7 +353,7 @@ Against the [Kimi Code CLI docs — Agents & Subagents](https://www.kimi.com/cod
 ## Architecture
 
 Core/adapter split: `packages/core/` is pure logic with **zero pi imports**
-(the future `@muselinn/core` package / MusePi fork foundation); the repo
+the repo
 root holds the pi adapter (entry, pi-tui components, tool registration).
 
 ```
@@ -391,7 +426,7 @@ node tests/webfetch.test.mjs                      # web extraction — 12
 node tests/plugin.test.mjs                        # plugin manifest/discovery — 17
 node tests/renderer.test.mjs                      # incremental renderer buffer/tree — 16
 node tests/stream-rules.test.mjs                  # stream entry rules — 14
-node tests/musepi-config.test.mjs                 # MusePi settings schema — 9
+
 ```
 
 The suites run on Node 20/22/24 (20 via `tests/ts-esm-loader.mjs`, a
@@ -409,7 +444,7 @@ npm run version-patch && git tag v0.9.1 && git push origin v0.9.1
 
 ## Roadmap
 
-- **MusePi** — the fork track: `@muselinn/core` is extracted (Phase 1 done, `packages/core/` has zero pi imports); next is a self-developed incremental renderer replacing pi-tui with a pi extension API compat layer. See `MusePi-PLAN.md` and `RESEARCH-kimi-code.md`
+
 - **i18n** — bilingual harness UI text and notifications (docs are already split en/zh-CN; the project page has an EN/中 toggle)
 - **Math renderer graduation** — merge `feature/math-renderer` once compaction-path context safety is confirmed
 - **Clustered diff preview** — kimi-style ±3-line clustered diffs in edit/write approval messages (deferred from the P1 batch)

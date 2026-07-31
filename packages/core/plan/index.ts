@@ -323,6 +323,38 @@ export class PlanManager {
     return plan.path;
   }
 
+  /**
+   * True when the given path is the active plan file (or inside the
+   * session's plans/ directory). Used for plan-file write approval.
+   *
+   * Matching rules (shared with shouldBlockTool):
+   *   - Exact match on the plan path
+   *   - `local://<basename>` scheme (pi core artifact URL, matched by basename)
+   *   - Resolved absolute path inside the session's `plans/` directory
+   */
+  isPlanFilePath(filePath?: string): boolean {
+    if (!filePath) return false;
+
+    const plan = planModeState.currentPlan;
+    if (plan?.path) {
+      // Exact match against the active plan file
+      if (filePath === plan.path) return true;
+      // local://<name>.md — match basename against the plan filename
+      if (filePath.startsWith('local://')) {
+        const localBasename = filePath.slice('local://'.length);
+        const planBasename = path.basename(plan.path);
+        if (localBasename === planBasename) return true;
+      }
+    }
+
+    // Resolved absolute path inside sessionDir/plans/
+    const resolvedFile = path.resolve(filePath);
+    const planDir = path.resolve(
+      this.sessionDir ? path.join(this.sessionDir, "plans") : path.join("plans")
+    );
+    return resolvedFile === planDir || resolvedFile.startsWith(planDir + path.sep);
+  }
+
   // ── Tool Restrictions ──────────────────────────────────────────────────
 
   /**
@@ -351,29 +383,7 @@ export class PlanManager {
     // Write/Edit: only the plan file is writable
     if (toolName === 'write' || toolName === 'edit') {
       if (!filePath) return true; // no path → block
-
-      const plan = planModeState.currentPlan;
-      if (plan?.path) {
-        // Exact match against the active plan file
-        if (filePath === plan.path) return false;
-        // local://<name>.md — match basename against the plan filename
-        if (filePath.startsWith('local://')) {
-          const localBasename = filePath.slice('local://'.length);
-          const planBasename = path.basename(plan.path);
-          if (localBasename === planBasename) return false;
-        }
-      }
-
-      // Resolved absolute path inside sessionDir/plans/
-      const resolvedFile = path.resolve(filePath);
-      const planDir = path.resolve(
-        this.sessionDir ? path.join(this.sessionDir, "plans") : path.join("plans")
-      );
-      if (resolvedFile === planDir || resolvedFile.startsWith(planDir + path.sep)) {
-        return false;
-      }
-
-      return true; // block write/edit outside plan file
+      return !this.isPlanFilePath(filePath);
     }
 
     // Bash is NOT blocked — follows normal permission mode (auto/yolo/manual),
@@ -392,6 +402,14 @@ export class PlanManager {
    * Build plan mode injection for system prompt (Kimi Code-style).
    * Full variant on first injection or after user message; sparse variant
    * on subsequent assistant turns to avoid repetition.
+   *
+   * Wording is aligned with Kimi Code's plan-mode injection
+   * (packages/agent-core/src/agent/injection/plan-mode.ts):
+   * - Edits are restricted to the current plan file unless a tool request
+   *   is explicitly approved.
+   * - Bash is NOT banned — it follows the normal permission mode and rules.
+   * - TaskStop, CronCreate, CronDelete are blocked in plan mode.
+   * - Turns must end with ask_user_question or exit_plan_mode.
    */
   buildInjection(sparse = false): string | undefined {
     if (!planModeState.isActive) return undefined;
@@ -401,32 +419,40 @@ export class PlanManager {
 
     if (sparse) {
       // Sparse reminder: short, just enough to keep the model oriented
+      // (Kimi Code sparseReminder parity).
       return [
         `## Plan Mode Active`,
         ``,
-        `You are still in Plan Mode. Keep exploring and updating the plan file.`,
+        `Plan mode still active (see full instructions earlier). Prefer read-only tools except the current plan file. Use write or edit to modify the plan file; if it does not exist yet, create it with write first. Use Bash only when needed; Bash follows the normal permission mode and rules. Use ask_user_question to clarify user preferences when it helps you write a better plan. If the plan has multiple approaches, pass options to exit_plan_mode so the user can choose. End turns with ask_user_question (for clarifications) or exit_plan_mode (for approval). Never ask about plan approval via text or ask_user_question.`,
+        ``,
         `Plan file: ${planPath}`,
-        `Only read-only tools and plan file edits are allowed.`,
-        `ExitPlanMode submits the plan for review.`,
       ].join('\n');
     }
 
-    // Full reminder
+    // Full reminder (Kimi Code fullReminder parity).
     const parts = [
       `## Plan Mode Active`,
       ``,
-      `You are in Plan Mode. Your task is to:`,
-      `1. Explore the codebase using read-only tools (read, grep, find, ls)`,
-      `2. Write a detailed implementation plan`,
-      `3. Save the plan to a file (use path: \`${planPath}\`)`,
+      `Plan mode is active. You MUST NOT make any edits (with the exception of the current plan file) or otherwise make changes to the system unless a tool request is explicitly approved. Prefer read-only tools. Use Bash only when needed; Bash follows the normal permission mode and rules. This supersedes any other instructions you have received. TaskStop, CronCreate, and CronDelete are also blocked in plan mode — call exit_plan_mode first if you need them.`,
       ``,
-      `Plan file path: ${planPath}`,
+      `Workflow:`,
+      `  1. Understand — explore the codebase with read, grep, find, ls.`,
+      `  2. Design — converge on the best approach; consider trade-offs but aim for a single recommendation.`,
+      `  3. Review — re-read key files to verify understanding.`,
+      `  4. Write Plan — modify the plan file with write or edit. Use write if the plan file does not exist yet.`,
+      `  5. Exit — call exit_plan_mode for user approval.`,
       ``,
-      `**IMPORTANT**: You can ONLY use read-only tools and write/edit the plan file.`,
-      `Do NOT modify any source code files until the plan is approved.`,
+      `## Handling multiple approaches`,
+      `Keep it focused: at most 2-3 meaningfully different approaches. Do NOT pad with minor variations — if one approach is clearly superior, just propose that one.`,
+      `When the best approach depends on user preferences, constraints, or context you don't have, use ask_user_question to clarify first. This helps you write a better, more targeted plan rather than dumping multiple options for the user to sort through.`,
+      `When you do include multiple approaches in the plan, you MUST pass them as the \`options\` parameter when calling exit_plan_mode, so the user can select which approach to execute at approval time.`,
+      `NEVER write multiple approaches in the plan and call exit_plan_mode without the \`options\` parameter — the user will only see the default approval controls with no way to choose a specific approach.`,
       ``,
-      `**AskUserQuestion** is available — ask the user for clarification when needed.`,
-      `When your plan is complete, call **exit_plan_mode** to submit it for review.`,
+      `ask_user_question is for clarifying missing requirements or user preferences that affect the plan.`,
+      `Never ask about plan approval via text or ask_user_question.`,
+      `Your turn must end with either ask_user_question (to clarify requirements or preferences) or exit_plan_mode (to request plan approval). Do NOT end your turn any other way.`,
+      ``,
+      `Plan file: ${planPath}`,
     ];
 
     if (plan && plan.content) {

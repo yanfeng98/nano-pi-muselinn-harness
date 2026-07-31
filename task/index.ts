@@ -25,6 +25,8 @@ import * as piCodingAgent from "@earendil-works/pi-coding-agent";
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { loadSkillsForCwd } from "../packages/core/skills/index";
+import { getProfile } from "../packages/core/profile/profiles.ts";
+import { getProfilePrompt } from "../packages/core/profile/tool-builder.ts";
 
 export type { BackgroundTaskEntry } from "../packages/core/task/state";
 
@@ -311,10 +313,11 @@ export function registerBackgroundTools(pi: any): void {
         return { content: [{ type: "text", text: "No model available." }] };
       }
 
-      const resourceLoader = createSubagentResourceLoader(ctx);
-      const tools = params.subagent_type === "coder"
+      const subagentType = params.subagent_type || "explore";
+      const resourceLoader = createSubagentResourceLoader(ctx, subagentType);
+      const tools = subagentType === "coder"
         ? ["read", "bash", "edit", "write", "grep", "find", "ls"]
-        : ["read", "grep", "find", "ls"];
+        : ["read", "bash", "grep", "find", "ls"];
 
       backgroundManager.register({
         id: taskId,
@@ -525,7 +528,7 @@ async function runBackgroundSession(
 }
 
 // Exported for tests; production callers use it internally per run_background.
-export function createSubagentResourceLoader(ctx: any): any {
+export function createSubagentResourceLoader(ctx: any, profileName?: string): any {
   // pi >= 0.81 requires LoadExtensionsResult.runtime — AgentSession passes it
   // straight into ExtensionRunner, whose bindCore() crashes on undefined
   // ("Cannot set properties of undefined (setting 'sendMessage')"), which
@@ -533,6 +536,19 @@ export function createSubagentResourceLoader(ctx: any): any {
   // pi 0.80.x neither exports createExtensionRuntime nor reads .runtime, so
   // include it only when available.
   const createExtRuntime = (piCodingAgent as any).createExtensionRuntime as (() => unknown) | undefined;
+
+  // Inject profile role prompt (Kimi Code-aligned)
+  let systemPrompt = ctx.getSystemPrompt?.() || "";
+  if (profileName) {
+    const profile = getProfile(profileName);
+    if (profile) {
+      const rolePrompt = getProfilePrompt(profile);
+      if (rolePrompt) {
+        systemPrompt += `\n\n---\n${rolePrompt}`;
+      }
+    }
+  }
+
   return {
     getExtensions: () => ({
       extensions: [],
@@ -544,7 +560,7 @@ export function createSubagentResourceLoader(ctx: any): any {
     getPrompts: () => ({ prompts: [], diagnostics: [] }),
     getThemes: () => ({ themes: [], diagnostics: [] }),
     getAgentsFiles: () => ({ agentsFiles: [] }),
-    getSystemPrompt: () => ctx.getSystemPrompt?.() || "",
+    getSystemPrompt: () => systemPrompt,
     getAppendSystemPrompt: () => [],
     extendResources: () => {},
     reload: async () => {},

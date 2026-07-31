@@ -54,6 +54,22 @@ title: pi-muselinn-harness
   </div>
 </div>
 
+<h2><span data-l="en">New in 0.9.13</span><span data-l="zh">0.9.13 新功能</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Plan mode Kimi Code full alignment</span><span data-l="zh">Plan 模式全面对齐 Kimi Code</span>
+<span data-l="en">Plan injection rewritten to match Kimi Code's plan-mode.ts (full + sparse). enter/exit_plan_mode and plan-file writes auto-approved. Per-tool deny messages for TaskStop, Cron mutations. Plan approval panel shows full file content (removed 500-char truncation).</span><span data-l="zh">Plan 注入文案重写匹配 Kimi Code 的 plan-mode.ts（完整+精简）。enter/exit_plan_mode 和 plan 文件写入自动批准。TaskStop、Cron 变更有具体拒绝消息。Plan 审批面板显示完整文件内容。</span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">Permission dialog + Subagent profiles</span><span data-l="zh">权限弹窗 + 子代理 Profile</span>
+<span data-l="en">"Deny with reason" Esc now returns to options instead of ending the flow. New packages/core/profile/ with CODER/EXPLORE/PLAN profiles aligned with Kimi Code YAML definitions.</span><span data-l="zh">"Deny with reason" 按 Esc 回到选项而非结束。新增 packages/core/profile/ 包含 CODER/EXPLORE/PLAN profile，对齐 Kimi Code YAML。</span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">Preview box fix + misc</span><span data-l="zh">预览框修复 + 杂项</span>
+<span data-l="en">Trimmed Markdown trailing whitespace so box borders fit terminal. Accounted for Text paddingX in stacked layout. Replaced non-existent theme color "info" with "accent". "n note" hint only shows when an option has a preview.</span><span data-l="zh">去除 Markdown 尾部空格，盒边框适配终端宽度。堆叠布局计入 Text paddingX。替换不存在的 theme 色 "info" 为 "accent"。"n note" 提示仅在有预览时显示。</span>
+</div>
+</div>
+
 <h2><span data-l="en">New in 0.9.11</span><span data-l="zh">0.9.11 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
@@ -203,40 +219,6 @@ title: pi-muselinn-harness
 <div class="card reveal" markdown="1">
 ### <span data-l="en">pi 0.81 ready</span><span data-l="zh">已兼容 pi 0.81</span>
 <span data-l="en">Verified against pi 0.81.x. Upgrading? Remove the old companion extensions (<code>rpiv-ask-user-question</code>, <code>rpiv-todo</code>) — the built-in tools replace them.</span><span data-l="zh">已验证兼容 pi 0.81.x。升级注意：请移除旧的伴随扩展（<code>rpiv-ask-user-question</code>、<code>rpiv-todo</code>）——内置工具已替代它们。</span>
-</div>
-</div>
-
-<style>.beta-badge{display:inline-block;font-family:var(--mono);font-size:.62rem;letter-spacing:.06em;padding:.12rem .5rem;border-radius:4px;border:1px solid var(--accent2);color:var(--accent2);vertical-align:middle;margin-left:.5rem;line-height:1.4}</style>
-
-<h2><a href="https://muselinn.github.io/MusePi/" style="color:inherit;text-decoration:none"><span data-l="en">MusePi — the fork</span><span data-l="zh">MusePi — 我们的 fork</span></a> <span class="beta-badge">BETA</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">What it is</span><span data-l="zh">是什么</span>
-<span data-l="en"><a href="https://muselinn.github.io/MusePi/">MusePi</a> is our pi fork where the main-line development happens — everything in this harness, native: hash-anchored editing (hashline), per-role model routing, lazy LSP with write-through diagnostics, and progressive tool disclosure for Kimi K3.</span><span data-l="zh"><a href="https://muselinn.github.io/MusePi/">MusePi</a> 是我们的 pi fork，主线开发所在——本 harness 能力的原生形态：哈希锚定编辑（hashline）、分角色模型路由、LSP 懒加载与写后诊断回灌、K3 动态工具加载。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Why a fork</span><span data-l="zh">为什么 fork</span>
-<span data-l="en">Some things extensions can't do: swarm subagents running in auto-created git worktrees (merged back on completion), deterministic zero-LLM compaction (snapcompact), a Markdown memory system with BM25 recall, and terminal notifications.</span><span data-l="zh">有些事扩展做不到：swarm 子代理自动 git worktree 隔离（完成自动合并回写）、零 LLM 调用的确定性压缩（snapcompact）、Markdown 记忆系统（BM25 召回）、终端通知。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Relationship</span><span data-l="zh">两者关系</span>
-<span data-l="en">The harness stays maintained — bug fixes, pi compatibility, and features that fit the extension form. MusePi gets the capabilities that need core changes. Same core logic, two delivery vehicles.</span><span data-l="zh">harness 持续维护——bug 修复、pi 兼容、适合扩展形态的功能照加。需要改核心的能力进 MusePi。同一套 core 逻辑，两个交付载体。</span>
-</div>
-</div>
-
-<h2><span data-l="en">What's next</span><span data-l="zh">下一步</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Advisor &amp; i18n</span><span data-l="zh">顾问与 i18n</span>
-<span data-l="en">Advisor side-review model on top of the model-roles table; native bilingual UI (English/Chinese) for MusePi — docs and this page are already bilingual (toggle in the nav).</span><span data-l="zh">基于模型角色表的 advisor 旁路评审；MusePi 原生双语界面（中/英）——文档与本页面已双语（导航栏切换）。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Memory v2</span><span data-l="zh">记忆系统 v2</span>
-<span data-l="en"><code>/dream</code> distillation across sessions and a checkpoint-writer that works with compaction — building on the W5 memory store.</span><span data-l="zh">跨会话 <code>/dream</code> 蒸馏、与压缩联动的 checkpoint-writer——在 W5 记忆存储之上。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Native approval panel</span><span data-l="zh">审批面板原生化</span>
-<span data-l="en">A native approval dialog in MusePi consuming the clustered-diff renderer, completing what the extension's panel started.</span><span data-l="zh">MusePi 原生审批对话框，消费 clustered diff 渲染器，完成扩展版审批面板的未竟之路。</span>
 </div>
 </div>
 

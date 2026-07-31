@@ -12,9 +12,7 @@ import { progressEstimator } from "../packages/core/swarm/types";
 import {
   CONFIG_DIR_NAME,
   createAgentSession,
-  createCodingTools,
   createExtensionRuntime,
-  createReadOnlyTools,
   getAgentDir,
   SessionManager,
 } from "@earendil-works/pi-coding-agent";
@@ -24,6 +22,8 @@ import { hookEngine } from "../packages/core/hooks/index";
 import { loadSkillsForCwd } from "../packages/core/skills/index";
 import type { AgentProfile } from "../packages/core/agent-file/types.ts";
 import { toolPolicyService } from "../packages/core/tool-policy/index.ts";
+import { getProfile } from "../packages/core/profile/profiles.ts";
+import { buildProfileTools, getProfilePrompt } from "../packages/core/profile/tool-builder.ts";
 import { agentLifecycle } from "../packages/core/agent-lifecycle/index.ts";
 
 // Append one output line with a hard array-length cap (oldest dropped first).
@@ -118,6 +118,8 @@ export function createSubagentResourceLoader(ctx: {
   cwd: string;
   /** Optional agent profile — overrides system prompt with profile's prompt template. */
   agentProfile?: AgentProfile;
+  /** Profile tool definition — injects roleAdditional prompt into subagent system prompt. */
+  profileName?: string;
 }): ResourceLoader {
   // Use agent profile's system prompt when provided (with ${base_prompt} expansion)
   let basePrompt: string;
@@ -138,9 +140,21 @@ export function createSubagentResourceLoader(ctx: {
 
   // Inject current goal into subagent prompt
   const goalInjection = goalManager.buildInjection();
-  const enrichedPrompt = goalInjection
+  let enrichedPrompt = goalInjection
     ? `${systemPrompt}\n\n---\n${goalInjection}`
     : systemPrompt;
+
+  // Inject profile role prompt (Kimi Code-aligned: each profile has its
+  // own roleAdditional text that governs subagent behavior).
+  if (ctx.profileName) {
+    const profile = getProfile(ctx.profileName);
+    if (profile) {
+      const rolePrompt = getProfilePrompt(profile);
+      if (rolePrompt) {
+        enrichedPrompt += `\n\n---\n${rolePrompt}`;
+      }
+    }
+  }
 
   const extensionsResult = { extensions: [], errors: [], runtime: createExtensionRuntime() };
 
@@ -256,19 +270,21 @@ export async function runSubAgent(
   agentLifecycle.emit({ type: "agent.created", agentId, agentType, parentToolCallId: task.id });
   try { void hookEngine.fire("SubagentStart", { subagent_type: task.type, task_id: task.id }, { matcherText: task.type, cwd: ctx.cwd }); } catch { /* hooks fail open */ }
   try {
-  const resourceLoader = createSubagentResourceLoader({ ...ctx, agentProfile });
+  // Kimi Code-aligned subagent profiles: tools and role prompt are
+  // driven by the task type (coder / explore / plan). Falls back to
+  // coder when the profile is unknown.
+  const profileName = task.type === "coder" || task.type === "explore" || task.type === "plan"
+    ? task.type
+    : "coder";
+  const resourceLoader = createSubagentResourceLoader({ ...ctx, agentProfile, profileName });
   const models = ctx.modelRegistry.getAvailable();
-  // Kimi Code-aligned built-in subagent tool sets:
-  //  - coder:  full read/write + shell (default general-purpose agent)
-  //  - explore: read-only (no edit/write/bash)
-  //  - plan:    read-only, no shell at all (planning/architecture only)
-  // Nested agent dispatch is intentionally not exposed to subagents.
-  //
-  // Tools are constructed here and wrapped with the permission gate: the
-  // workers share the session's PermissionManager, so /mode switches
-  // propagate to in-flight subagents by construction, and 'ask' verdicts
-  // degrade to blocks (unattended workers cannot answer dialogs).
-  const baseTools = task.type === "coder" ? createCodingTools(ctx.cwd) : createReadOnlyTools(ctx.cwd);
+  // Build the tool array from the profile definition. Each profile
+  // declares its tool allowlist; the builder maps known tool names to
+  // pi SDK createTool() calls and skips extension-hosted tools
+  // (webSearch, fetchURL, taskList, etc.) that need the resource loader
+  // to provide the corresponding extensions.
+  const profile = getProfile(profileName);
+  const baseTools = profile ? buildProfileTools(profile, ctx.cwd) : [];
   const gatedTools = baseTools.map((t: any) =>
     wrapWithPermissionGate(t, (name, params) => permissionManager.evaluateForSubagent(name, params as Record<string, unknown>, ctx.cwd)),
   );

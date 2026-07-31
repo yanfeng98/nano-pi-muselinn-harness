@@ -179,7 +179,7 @@ export default function (pi: ExtensionAPI) {
   //    returns individual SKILL.md files with names already provided by
   //    pi-native dirs filtered out, so no collision diagnostics. ──
   try {
-    pi.on("resources_discover", (event: { cwd: string }) => {
+    pi.on("resources_discover", async (event: { cwd: string }) => {
       try {
         const skillPaths = [...listDiscoverableSkillFiles(event.cwd || process.cwd()), ...getPluginSkillFiles()];
         return skillPaths.length > 0 ? { skillPaths } : undefined;
@@ -223,25 +223,32 @@ export default function (pi: ExtensionAPI) {
   // session (the old confirm's implicit behavior); deny optionally
   // carries a user reason back to the model.
   permissionManager.setApprovalDialog(async (dialogCtx, toolName, title, message) => {
-    const choice = await showQuestionDialog(dialogCtx, {
-      question: `${approvalTitleFor(toolName)}\n${title}: ${message}`,
-      options: [
-        { label: "Allow once", description: "Approve this call only" },
-        { label: "Always allow (this session)", description: "Record approval for the rest of the session" },
-        { label: "Deny", description: "Block this call" },
-        { label: "Deny with reason", description: "Block and tell the agent why" },
-      ],
-    });
-    if (choice === "Allow once") return { decision: "once" };
-    if (choice === "Always allow (this session)") return { decision: "always" };
-    if (choice === "Deny with reason") {
-      let reason: string | undefined;
-      try {
-        reason = (await dialogCtx.ui.input("Reason for denying (optional)", "e.g. don't force-push to main")) || undefined;
-      } catch { /* input unavailable */ }
-      return { decision: "deny", reason };
+    // Loop so Esc in the "Deny with reason" input returns to the options
+    // (the same pattern the plan approval panel uses for its Revise input)
+    // instead of ending the whole dialog with a bare deny.
+    while (true) {
+      const choice = await showQuestionDialog(dialogCtx, {
+        question: `${approvalTitleFor(toolName)}\n${title}: ${message}`,
+        options: [
+          { label: "Allow once", description: "Approve this call only" },
+          { label: "Always allow (this session)", description: "Record approval for the rest of the session" },
+          { label: "Deny", description: "Block this call" },
+          { label: "Deny with reason", description: "Block and tell the agent why" },
+        ],
+      });
+      if (choice === "Allow once") return { decision: "once" };
+      if (choice === "Always allow (this session)") return { decision: "always" };
+      if (choice === "Deny with reason") {
+        let reason: string | undefined;
+        try {
+          reason = (await dialogCtx.ui.input("Reason for denying (optional)", "e.g. don't force-push to main")) || undefined;
+        } catch { /* input unavailable */ }
+        if (reason === undefined) continue; // Esc in input → back to the options
+        return { decision: "deny", reason };
+      }
+      // undefined (Esc at options) or "Deny" → deny
+      return { decision: "deny" };
     }
-    return { decision: "deny" };
   });
 
   // ── Background task manager binding ──
@@ -330,13 +337,19 @@ export default function (pi: ExtensionAPI) {
     // Agent lifecycle badge (Kimi Code-style: [3 agents running])
     const lifecycleCount = agentLifecycle.getActiveCount();
     ctx.ui.setStatus("lifecycle-agent-count", lifecycleCount > 0
-      ? ctx.ui.theme.fg("info", `[${lifecycleCount} agents running]`)
+      ? ctx.ui.theme.fg("accent", `[${lifecycleCount} agents running]`)
       : undefined
     );
     // Restore the todo panel (before binding so the first refresh shows it)
-    try { restoreTodos(ctx.sessionManager.getEntries()); } catch { /* ok */ }
-    bindTodoSession(ctx, (type, data) => { try { pi.appendEntry(type, data); } catch { /* stale ctx */ } });
-    refreshWidget();
+    try {
+      restoreTodos(ctx.sessionManager.getEntries());
+    } catch { /* ok */ }
+    try {
+      bindTodoSession(ctx, (type, data) => { try { pi.appendEntry(type, data); } catch { /* stale ctx */ } });
+    } catch { /* ok */ }
+    try {
+      refreshWidget();
+    } catch { /* ok */ }
 
     // Restore background tasks from persisted entries. Pass the raw entry
     // list: restore() understands both the legacy full-array entry type and
@@ -453,7 +466,7 @@ export default function (pi: ExtensionAPI) {
     // Agent lifecycle badge (Kimi Code-style)
     const lifecycleCount = agentLifecycle.getActiveCount();
     ctx.ui.setStatus("lifecycle-agent-count", lifecycleCount > 0
-      ? ctx.ui.theme.fg("info", `[${lifecycleCount} agents running]`)
+      ? ctx.ui.theme.fg("accent", `[${lifecycleCount} agents running]`)
       : undefined
     );
   }
@@ -536,7 +549,7 @@ export default function (pi: ExtensionAPI) {
   registerFetchUrl(pi);
   registerAgentFileTools(pi);
   registerPluginCommand(pi);
-  loadPlugins(pi, null);
+  try { loadPlugins(pi, null); } catch (e:any) { /* ok */ }
   goalManager.registerCommands(pi);
 
   // ── Register plan tools and commands (from plan/ module) ──
@@ -576,8 +589,32 @@ export default function (pi: ExtensionAPI) {
 
     // Plan mode restrictions (checked first, before policy chain)
     if (planManager.shouldBlockTool(toolName, filePath, bashCommand)) {
-      ctx.ui.notify(`Tool "${toolName}" is blocked in Plan Mode. Use read-only tools only.`, "warning");
-      return { block: true, reason: "Plan Mode: tool not allowed" };
+      // Kimi Code-aligned per-tool deny messages (plan-mode-guard-deny.ts parity).
+      let reason: string;
+      if (toolName === "task_stop") {
+        reason = "TaskStop is not available in plan mode. Call exit_plan_mode to exit plan mode before stopping a background task.";
+      } else if (toolName === "cron_create" || toolName === "cron_delete") {
+        reason = `${toolName} is not available in plan mode because it would mutate scheduled work that runs after plan exit. Call exit_plan_mode first.`;
+      } else {
+        const planFilePath = planManager.getPlanFilePath();
+        reason = `Plan mode is active. You may only write to the current plan file: ${planFilePath || "(no plan file selected yet)"}. Call exit_plan_mode to exit plan mode before editing other files.`;
+      }
+      ctx.ui.notify(reason, "warning");
+      return { block: true, reason: `Plan Mode: ${reason}` };
+    }
+
+    // Kimi Code plan-mode-tool-approve parity: entering plan mode and
+    // write/edit targeting the plan file are approved WITHOUT the
+    // permission dialog. exit_plan_mode is also approved — its own
+    // review panel handles user approval. (plan-mode-tool-approve.ts)
+    if (
+      toolName === "enter_plan_mode" ||
+      toolName === "exit_plan_mode" ||
+      (planManager.isPlanModeActive() &&
+        (toolName === "write" || toolName === "edit") &&
+        planManager.isPlanFilePath(filePath))
+    ) {
+      return undefined; // allowed, skip permission chain
     }
     
     // 18-level permission policy chain

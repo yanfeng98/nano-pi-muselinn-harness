@@ -4,7 +4,42 @@
 
 Kimi Code 风格的 Pi Agent 扩展 — Swarm + Goal + Plan + Permission + Task + Hooks + Skills + TUI 八模块架构，补齐 Pi 刻意不做的能力（子代理、计划模式……），全面对齐 Kimi Code 的子系统行为。
 
-> **开发重心**：主线开发在 **MusePi**（Pi fork）进行 — 见 [MusePi-PLAN.md](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/MusePi-PLAN.md)。本扩展持续维护：bug 修复、Pi 兼容更新，以及适合扩展形态的新功能也会继续加入。已验证兼容 pi 0.81.x 和 0.82.x。
+已验证兼容 pi 0.81.x–0.83.x。
+
+### 0.9.13 新功能
+
+**Plan 模式全面对齐 Kimi Code：**
+- Plan 注入文案重写，完全匹配 Kimi Code 的 `plan-mode.ts`（完整版 + 精简版）。
+- `enter_plan_mode`、`exit_plan_mode` 和 plan 文件写入自动批准（跳过权限链）。
+- 逐工具拒绝消息：TaskStop、CronCreate、CronDelete 在 plan 模式下有具体原因。
+- `isPlanFilePath()` 共享辅助函数，统一 plan 文件路径匹配。
+- Plan 审批面板显示完整文件内容（移除 500 字符截断）。
+
+**权限弹窗交互修复：**
+- “Deny with reason” 输入框：按 Esc 现在回到 4 个选项，而不是直接结束流程。
+- 循环对话与 plan 审批面板的 Revise 模式一致。
+
+**子代理 Profile 系统：**
+- 新增 `packages/core/profile/`，包含 CODER / EXPLORE / PLAN 三种 profile。
+- 工具权限对齐 Kimi Code YAML 定义（explore 有 bash，plan 无 write）。
+- Profile 通过 `buildProfileTools()` + `createSubagentResourceLoader()` 注入。
+
+**预览框修复：**
+- 去除 Markdown 尾部空格，防止盒边框超出终端宽度。
+- 堆叠布局中计入 pi-tui `Text` 组件的 `paddingX=1`。
+
+**其他：**
+- `theme.fg("info", ...)` 改为 `theme.fg("accent", ...)`（"info" 色不存在）。
+- `hasAnyPreviewOption()`：“n note”提示仅在选项有预览时显示。
+- 问卷 ←/→ 切换标签使用 `matchesKey()`（兼容 Kitty 协议）。
+- 全部 19 个测试套件通过。
+
+### 0.9.12 新功能
+
+- `resources_discover` 处理器改为 async 并加入耗时统计
+- `restoreTodos`、`bindTodoSession`、`refreshWidget`、`loadPlugins` 增加 try/catch 保护
+- 移除未使用的 `VisibleTodos` / `selectVisibleTodos` 死代码（78 行）
+- 清理 README 与文档中的 MusePi fork 引用
 
 ### 0.9.10 新功能
 
@@ -259,8 +294,7 @@ pi install local:~/.pi/agent/extensions/pi-muselinn-harness
 ## 架构
 
 core/adapter 分层:`packages/core/` 是**零 pi import** 的纯逻辑
-（未来的 `@muselinn/core` 包 / MusePi fork 地基）;仓库根部是 pi
-适配层（入口、pi-tui 组件、工具注册）。
+仓库根部是 pi 适配层（入口、pi-tui 组件、工具注册）。
 
 ```
 pi-muselinn-harness/
@@ -332,7 +366,7 @@ node tests/webfetch.test.mjs                      # web 内容提取 12 项
 node tests/plugin.test.mjs                        # 插件 manifest/发现 17 项
 node tests/renderer.test.mjs                      # 增量渲染器 buffer/tree 16 项
 node tests/stream-rules.test.mjs                  # 流式 entry 规则 14 项
-node tests/musepi-config.test.mjs                 # MusePi 设置 schema 9 项
+
 ```
 
 测试支持 Node 20/22/24（20 走 `tests/ts-esm-loader.mjs` TypeScript 转译
@@ -349,7 +383,7 @@ npm run version && git tag v0.9.0 && git push origin v0.9.0
 
 ## 下一步(Roadmap)
 
-- **MusePi** — fork 路线:`@muselinn/core` 已完成抽取（Phase 1 完成,`packages/core/` 零 pi import）;下一步是自研增量渲染器替换 pi-tui + pi extension API 兼容层。见 `MusePi-PLAN.md` 与 `RESEARCH-kimi-code.md`
+
 - **i18n** — harness 界面文案与通知双语化(文档已拆分中英;项目页已有 EN/中 切换)
 - **公式渲染转正** — 待压缩路径的上下文安全性确认后,合入 `feature/math-renderer`
 - **clustered diff 预览** — edit/write 审批消息中的 ±3 行聚簇 diff（P1 批次延迟项）

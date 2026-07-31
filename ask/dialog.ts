@@ -29,7 +29,9 @@
 import {
   Container,
   Input,
+  Key,
   Markdown,
+  matchesKey,
   Spacer,
   Text,
   truncateToWidth,
@@ -61,16 +63,7 @@ export interface QuestionsDialogResult {
   chatIndex?: number;
 }
 
-const KEY_UP = "\x1b[A";
-const KEY_DOWN = "\x1b[B";
-const KEY_LEFT = "\x1b[D";
-const KEY_RIGHT = "\x1b[C";
-const KEY_ESC = "\x1b";
-const KEY_ENTER_CR = "\r";
-const KEY_ENTER_LF = "\n";
-const KEY_TAB = "\t";
-const KEY_SHIFT_TAB = "\x1b[Z";
-const KEY_SPACE = " ";
+
 
 /** Gap between the options column and the preview column (side-by-side). */
 const PREVIEW_GAP = 2;
@@ -317,9 +310,9 @@ export class QuestionDialogComponent extends Container {
 
     if (st.editingOther && !this.isSubmitPage()) {
       // Esc is routed to otherInput.onEscape by Input itself.
-      if (keyData === KEY_UP || keyData === KEY_DOWN) {
+      if (matchesKey(keyData, Key.up) || matchesKey(keyData, Key.down)) {
         this.exitOtherEdit();
-        st.moveCursor(keyData === KEY_UP ? -1 : 1);
+        st.moveCursor(matchesKey(keyData, Key.up) ? -1 : 1);
         this.rebuild();
         return;
       }
@@ -330,9 +323,9 @@ export class QuestionDialogComponent extends Container {
 
     if (st.editingNote && !this.isSubmitPage()) {
       // Esc is routed to noteInput.onEscape by Input itself.
-      if (keyData === KEY_UP || keyData === KEY_DOWN) {
+      if (matchesKey(keyData, Key.up) || matchesKey(keyData, Key.down)) {
         this.exitNoteEdit();
-        st.moveCursor(keyData === KEY_UP ? -1 : 1);
+        st.moveCursor(matchesKey(keyData, Key.up) ? -1 : 1);
         this.rebuild();
         return;
       }
@@ -341,39 +334,39 @@ export class QuestionDialogComponent extends Container {
       return;
     }
 
-    if (keyData === KEY_ESC || keyData === "q") {
+    if (matchesKey(keyData, Key.escape) || keyData === "q") {
       this.cancel();
       return;
     }
 
     if (this.isSubmitPage()) {
-      if (keyData === KEY_ENTER_CR || keyData === KEY_ENTER_LF) {
+      if (matchesKey(keyData, Key.enter)) {
         this.submit();
         return;
       }
-      if (keyData === KEY_LEFT || keyData === KEY_SHIFT_TAB) this.gotoTab(this.tab - 1);
-      else if (keyData === KEY_RIGHT || keyData === KEY_TAB) this.gotoTab(this.tab + 1);
+      if (matchesKey(keyData, Key.left) || matchesKey(keyData, Key.shift("tab"))) this.gotoTab(this.tab - 1);
+      else if (matchesKey(keyData, Key.right) || matchesKey(keyData, Key.tab)) this.gotoTab(this.tab + 1);
       return;
     }
 
     // Tab switching (multi-question only).
     if (this.multi) {
-      if (keyData === KEY_LEFT || keyData === KEY_SHIFT_TAB) {
+      if (matchesKey(keyData, Key.left) || matchesKey(keyData, Key.shift("tab"))) {
         this.gotoTab(this.tab - 1);
         return;
       }
-      if (keyData === KEY_RIGHT || keyData === KEY_TAB) {
+      if (matchesKey(keyData, Key.right) || matchesKey(keyData, Key.tab)) {
         this.gotoTab(this.tab + 1);
         return;
       }
     }
 
-    if (keyData === KEY_UP || keyData === "k") {
+    if (matchesKey(keyData, Key.up) || keyData === "k") {
       st.moveCursor(-1);
       this.rebuild();
       return;
     }
-    if (keyData === KEY_DOWN || keyData === "j") {
+    if (matchesKey(keyData, Key.down) || keyData === "j") {
       st.moveCursor(1);
       this.rebuild();
       return;
@@ -399,13 +392,13 @@ export class QuestionDialogComponent extends Container {
       return;
     }
 
-    if (keyData === KEY_SPACE && st.spec.multiSelect) {
+    if (matchesKey(keyData, Key.space) && st.spec.multiSelect) {
       st.toggle(st.cursor);
       this.rebuild();
       return;
     }
 
-    if (keyData === KEY_ENTER_CR || keyData === KEY_ENTER_LF) {
+    if (matchesKey(keyData, Key.enter)) {
       if (st.spec.multiSelect && !st.isOther(st.cursor) && !st.isChat(st.cursor)) {
         this.advance(); // Enter confirms the whole question in multi mode
         return;
@@ -452,8 +445,10 @@ export class QuestionDialogComponent extends Container {
     } else {
       this.renderStackedOptions(st);
       // Narrow terminal degrade: the preview stacks under the option list.
+      // previewBlock must account for Text's default paddingX=1 (2 cols total)
+      // so the box border fits within the terminal width after Text adds margins.
       if (preview) {
-        for (const line of this.previewBlock(st, this.lastWidth)) {
+        for (const line of this.previewBlock(st, this.lastWidth - 2)) {
           this.body.addChild(new Text(line, 1, 0));
         }
       }
@@ -618,7 +613,7 @@ export class QuestionDialogComponent extends Container {
         lines = hit.lines;
       } else {
         const md = new Markdown(st.spec.options[target]!.preview!, 0, 0, this.mdTheme);
-        lines = stripFenceMarkers(md.render(inner));
+        lines = stripFenceMarkers(md.render(inner)).map((l) => l.trimEnd());
         this.previewCache.set(key, { width: inner, lines });
       }
     }
@@ -691,8 +686,8 @@ export class QuestionDialogComponent extends Container {
     const st = this.current();
     if (st.editingOther) return "type answer · Enter save · Esc stop editing";
     if (st.editingNote) return "type note · Enter save (empty clears) · Esc stop editing";
-    const tabs = this.multi ? " · ←/→/Tab switch" : "";
-    const note = " · n note";
+    const tabs = this.multi ? " · ←→/Tab switch" : "";
+    const note = st.hasAnyPreviewOption() ? " · n note" : "";
     if (st.spec.multiSelect) {
       return `↑↓/jk move · 1-9/Space toggle · Enter confirm${note}${tabs} · Esc cancel`;
     }

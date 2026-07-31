@@ -376,6 +376,11 @@ export class AnswerState {
     return typeof p === "string" && p.trim() !== "";
   }
 
+  /** True when at least one option carries a preview (show "n note" hint). */
+  hasAnyPreviewOption(): boolean {
+    return this.spec.options.some((o) => typeof o.preview === "string" && o.preview.trim() !== "");
+  }
+
   isSelected(i: number): boolean {
     return this.spec.multiSelect ? this.multi.has(i) : this.single === i;
   }

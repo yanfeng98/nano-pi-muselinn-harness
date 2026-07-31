@@ -5,12 +5,10 @@ const {
   clonePhases,
   summarizePhases,
   formatSummary,
-  selectVisibleTodos,
   phaseRomanNumeral,
   formatPhaseDisplayName,
   phasesToMarkdown,
   markdownToPhases,
-  MAX_VISIBLE_TODOS,
 } = await import("../packages/core/todo/types.ts");
 
 let pass = 0, fail = 0;
@@ -180,30 +178,8 @@ check("formatSummary: contains remaining", summary.includes("remaining"));
 const emptySummary = formatSummary([], []);
 check("formatSummary: empty list", emptySummary === "Todo list cleared.");
 
-// ── 10. selectVisibleTodos ─────────────────────────────────────
 
-const short = [{ name: "P", tasks: [{ content: "a", status: "pending" }, { content: "b", status: "completed" }] }];
-const v1 = selectVisibleTodos(short);
-check("selectVisible: short list passes all", v1.rows.length === 2 && v1.hidden === 0);
-
-// Long list (>5)
-const manyTasks = [
-  { name: "P", tasks: [
-    { content: "a", status: "pending" },
-    { content: "b", status: "pending" },
-    { content: "c", status: "pending" },
-    { content: "d", status: "in_progress" },
-    { content: "e", status: "pending" },
-    { content: "f", status: "pending" },
-    { content: "g", status: "completed" },
-  ]},
-];
-const v2 = selectVisibleTodos(manyTasks);
-check("selectVisible: max 5", v2.rows.length <= MAX_VISIBLE_TODOS);
-check("selectVisible: in_progress visible", v2.rows.some(t => t.status === "in_progress"));
-check("selectVisible: hidden count correct", v2.hidden === manyTasks[0].tasks.length - v2.rows.length);
-
-// ── 11. phaseRomanNumeral ──────────────────────────────────────
+// ── 10. phaseRomanNumeral ──────────────────────────────────────
 
 check("roman: 1=I", phaseRomanNumeral(1) === "I");
 check("roman: 4=IV", phaseRomanNumeral(4) === "IV");

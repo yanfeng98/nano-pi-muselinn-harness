@@ -30,11 +30,6 @@ export interface TodoCompletionTransition {
   phase: string;
 }
 
-export interface VisibleTodos {
-  rows: TodoItem[];
-  hidden: number;
-  hiddenCounts: Record<TodoStatus, number>;
-}
 
 export type TodoOpParams = {
   op: TodoOperation;
@@ -46,7 +41,6 @@ export type TodoOpParams = {
   items?: string[];
 };
 
-export const MAX_VISIBLE_TODOS = 5;
 export const TODO_ENTRY_TYPE = "muselinn_todo";
 const DEFAULT_INIT_PHASE = "Tasks";
 const MAX_ITEMS = 50;
@@ -648,78 +642,6 @@ export function formatPhaseDisplayName(name: string, oneBasedIndex: number): str
 }
 
 // ── Widget selection helpers ───────────────────────────────────
-
-/**
- * Fold the list to at most maxVisible rows: in_progress first,
- * then earliest pending, keeping one slot for the most recent done.
- * Updated for phase model: flattens all phases.
- */
-export function selectVisibleTodos(
-  phases: readonly TodoPhase[],
-  maxVisible: number = MAX_VISIBLE_TODOS,
-): VisibleTodos {
-  const todos = phases.flatMap((p) => p.tasks);
-  if (todos.length <= maxVisible) {
-    return { rows: [...todos], hidden: 0, hiddenCounts: { pending: 0, in_progress: 0, completed: 0, abandoned: 0 } };
-  }
-
-  const inProgress: number[] = [];
-  const pending: number[] = [];
-  const done: number[] = [];
-  const abandoned: number[] = [];
-
-  for (const [i, todo] of todos.entries()) {
-    if (todo.status === "in_progress") inProgress.push(i);
-    else if (todo.status === "pending") pending.push(i);
-    else if (todo.status === "completed") done.push(i);
-    else abandoned.push(i);
-  }
-
-  const picked = new Set<number>();
-  const add = (indices: number[], count: number) => {
-    for (const i of indices) {
-      if (count <= 0) break;
-      picked.add(i);
-      count--;
-    }
-  };
-
-  // All in_progress first
-  add(inProgress, inProgress.length);
-  const remaining = maxVisible - picked.size;
-
-  if (remaining > 0) {
-    // Then earliest pending
-    add(pending, remaining);
-  }
-  const remaining2 = maxVisible - picked.size;
-  if (remaining2 > 0) {
-    // Keep one slot for the most recent done
-    const doneToShow = done.slice(-remaining2);
-    add(doneToShow, doneToShow.length);
-  }
-  const remaining3 = maxVisible - picked.size;
-  if (remaining3 > 0) {
-    // Fill with abandoned from end
-    const abandonedToShow = abandoned.slice(-remaining3);
-    add(abandonedToShow, abandonedToShow.length);
-  }
-
-  const rows: TodoItem[] = [];
-  for (const [i, todo] of todos.entries()) {
-    if (picked.has(i)) rows.push(todo);
-  }
-
-  const hiddenCounts: Record<TodoStatus, number> = { pending: 0, in_progress: 0, completed: 0, abandoned: 0 };
-  for (const [i, todo] of todos.entries()) {
-    if (!picked.has(i)) hiddenCounts[todo.status] += 1;
-  }
-  const hidden = todos.length - rows.length;
-
-  return { rows, hidden, hiddenCounts };
-}
-
-// ── Collapsed-phase viewport (oh-my-pi style) ────────────────
 
 export const COLLAPSED_TASKS_PER_PHASE = 4;
 
