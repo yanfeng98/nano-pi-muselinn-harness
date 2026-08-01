@@ -8,6 +8,14 @@ title: Changelog — pi-muselinn-harness
 <p>All notable changes, in reverse chronological order. The full file lives at
 <a href="https://github.com/MuseLinn/pi-muselinn-harness/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
 
+## 0.9.16
+
+**todo_list tool prompts de-ambiguated:**
+- `op=init` now unambiguously requires `list=[{phase, items}]`; the top-level
+  `items` field is documented as plain strings only (append), removing the
+  "flat init fallback" phrasing that led models to pass object arrays and get
+  schema validation errors (`items.0: must be string`).
+
 ## 0.9.15
 
 **Todo widget auto-clear (OMP parity):**
