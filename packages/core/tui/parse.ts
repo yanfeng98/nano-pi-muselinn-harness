@@ -3,14 +3,19 @@
 //
 //   /tui                            → status
 //   /tui style <plain|boxed|compact>  → editor chrome
+//   /tui shimmer <classic|kitt|disabled> → working-message sweep
 //   /tui timing                     → render timing stats (env-gated)
 // ============================================================
 
 import { EDITOR_STYLES, type EditorStyle } from "./box.ts";
 
+export const SHIMMER_MODES = ["classic", "kitt", "disabled"] as const;
+export type ShimmerMode = (typeof SHIMMER_MODES)[number];
+
 export type TuiCommand =
   | { kind: "status" }
   | { kind: "style"; style: EditorStyle }
+  | { kind: "shimmer"; shimmer: ShimmerMode }
   | { kind: "timing" }
   | { kind: "error"; message: string };
 
@@ -26,6 +31,13 @@ export function parseTuiArgs(args: string): TuiCommand {
     }
     return { kind: "error", message: `Usage: /tui style <${EDITOR_STYLES.join("|")}>` };
   }
+  if (sub === "shimmer") {
+    const mode = (tokens[1] || "").toLowerCase();
+    if ((SHIMMER_MODES as readonly string[]).includes(mode)) {
+      return { kind: "shimmer", shimmer: mode as ShimmerMode };
+    }
+    return { kind: "error", message: `Usage: /tui shimmer <${SHIMMER_MODES.join("|")}>` };
+  }
   if (sub === "timing") {
     return { kind: "timing" };
   }
@@ -34,6 +46,6 @@ export function parseTuiArgs(args: string): TuiCommand {
   }
   return {
     kind: "error",
-    message: "Usage: /tui style <plain|boxed|compact> | /tui timing",
+    message: "Usage: /tui style <plain|boxed|compact> | /tui shimmer <classic|kitt|disabled> | /tui timing",
   };
 }

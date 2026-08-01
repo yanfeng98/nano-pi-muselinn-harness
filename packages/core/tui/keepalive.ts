@@ -2,15 +2,23 @@
 // TUI — spinner keep-alive gate (pure, no pi imports).
 //
 // pi-tui re-renders the WHOLE component tree per frame, which at high
-// context costs real milliseconds. The border spinner animation rides on
-// pi's natural renders (wall-clock frame selection in the slot builder);
-// the keep-alive timer exists solely to cover quiet gaps (long tool
-// executions with no streaming). This predicate is the gate: only force a
-// render when the agent is working AND pi has been quiet for a while.
+// context costs real milliseconds. The border spinner + shimmer sweep ride
+// on pi's natural renders (wall-clock frame/band selection in the slot
+// builder); the keep-alive timer exists solely to cover quiet gaps (long
+// tool executions with no streaming).
+//
+// The quiet threshold is kept small (50ms) so the animation stays smooth
+// (~25fps via the 40ms keep-alive timer) even when the agent loop produces
+// no natural renders. When pi renders naturally (streaming deltas, tool
+// bursts — typically >>25fps) the gate skips the forced render entirely,
+// so active phases cost nothing extra.
 // ============================================================
 
 /** Minimum quiet period before a keep-alive render is forced (ms). */
-export const KEEP_ALIVE_QUIET_MS = 400;
+export const KEEP_ALIVE_QUIET_MS = 50;
+
+/** Keep-alive timer cadence (ms) — ~25fps floor for the spinner/shimmer. */
+export const KEEP_ALIVE_INTERVAL_MS = 40;
 
 export function shouldKeepAliveRender(working: boolean, lastRenderAt: number, now: number): boolean {
   return working && now - lastRenderAt >= KEEP_ALIVE_QUIET_MS;

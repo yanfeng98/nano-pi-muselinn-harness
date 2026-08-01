@@ -12,7 +12,8 @@
 // ============================================================
 
 import { type EditorStyle } from "../packages/core/tui/box";
-import { shouldKeepAliveRender, wallClockFrameIndex } from "../packages/core/tui/keepalive";
+import { shouldKeepAliveRender, wallClockFrameIndex, KEEP_ALIVE_INTERVAL_MS } from "../packages/core/tui/keepalive";
+import { shimmerText, type ShimmerMode } from "../packages/core/tui/shimmer";
 import { loadTuiConfig, saveTuiConfig, type TuiConfig } from "../packages/core/tui/config";
 import { MuselinnEditor } from "./editor";
 import { parseTuiArgs } from "../packages/core/tui/parse";
@@ -31,6 +32,8 @@ interface TuiRuntime {
   tui: TUI | null;
   style: EditorStyle;
   modelInBorder: boolean;
+  /** Loaded shimmer mode (classic | kitt | disabled). */
+  shimmer: "classic" | "kitt" | "disabled";
   editor: MuselinnEditor | null;
   working: boolean;
   workingMessage: string | undefined;
@@ -46,6 +49,7 @@ const rt: TuiRuntime = {
   tui: null,
   style: "boxed",
   modelInBorder: false,
+  shimmer: "classic",
   editor: null,
   working: false,
   workingMessage: undefined,
@@ -83,7 +87,25 @@ function slotLeft(): string {
     // only needs to cover quiet gaps — not drive the animation itself.
     const frame = frames[wallClockFrameIndex(frames.length, Date.now(), FRAME_INTERVAL_MS)];
     parts.push(theme.fg("accent", frame));
-    if (rt.workingMessage) parts.push(theme.fg("dim", rt.workingMessage));
+    if (rt.workingMessage) {
+      // Shimmer sweep (OMP-style): the band's crest paints accent+bold, so
+      // the dim message stays legible exactly where the light passes — no
+      // need for brighter idle colors. Wall-clock driven, so it stays smooth
+      // even when the agent loop stalls a render.
+      const mode = rt.config.shimmer;
+      if (mode !== "disabled") {
+        parts.push(
+          shimmerText(
+            rt.workingMessage,
+            { fgAnsi: (color) => theme.getFgAnsi(color as any) },
+            mode as ShimmerMode,
+            Date.now(),
+          ),
+        );
+      } else {
+        parts.push(theme.fg("dim", rt.workingMessage));
+      }
+    }
   }
   return parts.join(" ");
 }
@@ -154,11 +176,13 @@ function startSpinner(): void {
   // which at high context costs real milliseconds. The animation itself
   // rides on pi's natural renders (wall-clock frame in slotLeft); this
   // timer exists solely to cover quiet gaps (long tool executions with no
-  // streaming), and skips itself whenever a render happened recently.
+  // streaming). KEEP_ALIVE_INTERVAL_MS (40ms) floors the cadence at ~25fps
+  // so the spinner + shimmer sweep stay smooth; the gate skips the render
+  // entirely whenever pi rendered recently (natural streaming/tool frames).
   rt.spinnerTimer = setInterval(() => {
     if (!shouldKeepAliveRender(rt.working, rt.lastRenderAt, performance.now())) return;
     try { rt.tui?.requestRender(); } catch { /* stale tui */ }
-  }, 500);
+  }, KEEP_ALIVE_INTERVAL_MS);
 }
 
 function setWorking(working: boolean, message?: string): void {
@@ -176,7 +200,7 @@ function setWorking(working: boolean, message?: string): void {
 // ── Config helpers ────────────────────────────────────────────
 
 function persistConfig(): void {
-  const config: TuiConfig = { style: rt.style, modelInBorder: rt.modelInBorder };
+  const config: TuiConfig = { style: rt.style, modelInBorder: rt.modelInBorder, shimmer: rt.shimmer };
   saveTuiConfig(config);
 }
 
@@ -193,7 +217,7 @@ export function registerTui(pi: ExtensionAPI): void {
     try {
       config = loadTuiConfig(ctx.sessionManager.getCwd());
     } catch {
-      config = { style: "boxed", modelInBorder: false };
+      config = { style: "boxed", modelInBorder: false, shimmer: "classic" };
     }
 
     // Reset per-session working state before re-applying chrome.
@@ -202,6 +226,7 @@ export function registerTui(pi: ExtensionAPI): void {
     rt.runningTools.clear();
     rt.lastRenderAt = 0;
     rt.modelInBorder = config.modelInBorder;
+    rt.shimmer = config.shimmer;
 
     applyStyleToUi(ctx.ui, config.style);
   });
@@ -275,7 +300,7 @@ export function registerTui(pi: ExtensionAPI): void {
 
       switch (cmd.kind) {
         case "status": {
-          const lines = [`tui: style=${rt.style} · modelInBorder=${rt.modelInBorder}`];
+          const lines = [`tui: style=${rt.style} · modelInBorder=${rt.modelInBorder} · shimmer=${rt.shimmer}`];
           if (isTimingEnabled()) lines.push(renderTiming.format());
           ctx.ui.notify(lines.join("\n"), "info");
           break;
@@ -284,6 +309,13 @@ export function registerTui(pi: ExtensionAPI): void {
           applyStyleToUi(ctx.ui, cmd.style);
           persistConfig();
           ctx.ui.notify(`tui style: ${cmd.style}`, "info");
+          break;
+        }
+        case "shimmer": {
+          rt.shimmer = cmd.shimmer;
+          persistConfig();
+          try { rt.tui?.requestRender(); } catch { /* stale tui */ }
+          ctx.ui.notify(`tui shimmer: ${cmd.shimmer}`, "info");
           break;
         }
         case "timing": {

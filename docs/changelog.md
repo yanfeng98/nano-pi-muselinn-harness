@@ -16,6 +16,20 @@ title: Changelog — pi-muselinn-harness
   TUI input loop right after the interface rendered. Matches pi core's own
   background refresh behavior in `main.ts`.
 
+**Shimmer working message (OMP-style):**
+- The editor border's working label now gets a wall-clock driven light-band
+  sweep — `classic` cosine band or `kitt` K.I.T.T. scanner (default classic).
+  The crest paints accent+bold, so the dim message stays legible mid-animation.
+- New `packages/core/tui/shimmer.ts` (pure, zero pi imports): three-tier
+  palettes (low/mid/high), ANSI run coalescing, compiled-palette cache, and a
+  band-window fast path — ported from oh-my-pi's `theme/shimmer.ts` (MIT).
+- `/tui shimmer <classic|kitt|disabled>` switches live; persisted to
+  `muselinn-tui.json` (`shimmer` field, default `classic`).
+- Keep-alive render cadence raised 500ms → 40ms with a 50ms quiet gate:
+  the spinner + sweep stay smooth (~25fps floor) even when the agent loop
+  produces no natural renders; streaming/tool phases still ride pi's natural
+  renders at zero extra cost.
+
 **Docs & site:**
 - README restructured for new users (what-is-this table, quick start) and the
   11 versions of release notes moved to a dedicated `CHANGELOG.md`; Pages

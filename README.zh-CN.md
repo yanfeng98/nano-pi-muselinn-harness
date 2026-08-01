@@ -122,6 +122,7 @@ pi                                      # 重启 pi，然后试试：
 - **`/tui` 命令** — `/tui style plain|boxed|compact` 热切换编辑器样式（不重启，保留文本/焦点/键位），`/tui timing` 查看渲染耗时；配置持久化到 `~/.pi/agent/muselinn-tui.json`（项目级 `.pi/` 覆盖）
 - **plan 徽标** — plan mode 激活时上边框显示 `plan` 文本徽标（不染边框色，与 pi 思考模式换色零冲突）
 - **性能探针** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` 统计 editor `render()` 的 P50/P99；spinner 仅在工作时以 250ms 帧率驱动
+- **Shimmer 工作消息（OMP 风格）** — 编辑器边框里的工作状态文字带墙钟驱动的光带扫描（`classic` 余弦光带或 `kitt` K.I.T.T. 扫描灯）；亮头处 accent+bold 高亮，浅色文字在动画中也清晰。默认 `low: dim / mid: muted / high: accent`；`/tui shimmer <classic|kitt|disabled>` 热切换，配置持久化。补帧节奏提升至 ~25fps，agent loop 无自然渲染时动画依然平滑（流式活跃时零额外开销）
 
 > 注：曾移植 pi-spark 的 BottomFiller 伪全屏，因其只在短会话有视觉效果已移除；真正的编辑器钉底需要 alternate screen，属 pi-core 范畴。
 
@@ -251,7 +252,7 @@ pi-muselinn-harness/
 
 ## 测试
 
-无需模型额度的 node 级单元测试（22 个套件，650+ 项断言）：
+无需模型额度的 node 级单元测试（23 个套件，660+ 项断言）：
 
 ```bash
 npm test                                        # 全部套件（node tests/run-all.mjs）
@@ -276,6 +277,7 @@ node tests/ask.test.mjs                           # ask 规格/对话框/答案/
 node tests/tool-policy.test.mjs                  # 工具策略门控 — 13
 node tests/todo.test.mjs                          # todo 模型 + 折叠策略 21 项
 node tests/shell-output.test.mjs                  # 输出净化器 21 项
+node tests/shimmer.test.mjs                     # shimmer 扫描动画引擎 — 10
 node tests/truncation.test.mjs                    # 结果落盘截断 13 项
 node tests/resume-guard.test.mjs                  # swarm resume 守卫 6 项
 node tests/webfetch.test.mjs                      # web 内容提取 12 项

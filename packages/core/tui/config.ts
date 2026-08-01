@@ -16,9 +16,16 @@ export interface TuiConfig {
   /** Show the model name on the editor's top border. Default off — pi's
    *  built-in status line already shows it (opt-in to avoid duplication). */
   modelInBorder: boolean;
+  /** Shimmer sweep on the working message in the editor border.
+   *  classic = cosine band, kitt = K.I.T.T. scanner, disabled = static. */
+  shimmer: "classic" | "kitt" | "disabled";
 }
 
-export const DEFAULT_TUI_CONFIG: TuiConfig = { style: "boxed", modelInBorder: false };
+export const DEFAULT_TUI_CONFIG: TuiConfig = {
+  style: "boxed",
+  modelInBorder: false,
+  shimmer: "classic",
+};
 
 const CONFIG_FILENAME = "muselinn-tui.json";
 
@@ -38,6 +45,9 @@ function sanitize(raw: any): Partial<TuiConfig> {
       out.style = raw.style as EditorStyle;
     }
     if (typeof raw.modelInBorder === "boolean") out.modelInBorder = raw.modelInBorder;
+    if (raw.shimmer === "classic" || raw.shimmer === "kitt" || raw.shimmer === "disabled") {
+      out.shimmer = raw.shimmer;
+    }
   }
   return out;
 }

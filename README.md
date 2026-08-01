@@ -124,6 +124,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **`/tui` command** — hot-switch styles without restarting (pi preserves text/focus/keybindings when swapping editors); `/tui timing` shows render timing; config persisted to `~/.pi/agent/muselinn-tui.json` (project `.pi/` override)
 - **Plan badge** — `plan` text badge on the top border while plan mode is active (no border recoloring — zero conflict with pi's thinking-level colors)
 - **Timing probe** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` records editor `render()` P50/P99; spinner only ticks at 250 ms while the agent works
+- **Shimmer working message (OMP-style)** — the working label in the editor border gets a wall-clock driven light-band sweep (`classic` cosine band or `kitt` K.I.T.T. scanner); the crest paints accent+bold so dim text stays legible mid-animation. `low: dim / mid: muted / high: accent` by default; `/tui shimmer <classic|kitt|disabled>` switches live, config persisted. Keep-alive render cadence raised to ~25fps so the sweep stays smooth even when the agent loop produces no natural renders (active streaming costs nothing extra)
 
 > Note: a pi-spark-style BottomFiller pseudo-fullscreen was implemented, then removed — it only has visual effect when the conversation is shorter than one screen. True editor pinning needs alternate-screen support in pi-core.
 
@@ -253,7 +254,7 @@ pi-muselinn-harness/
 
 ## Tests
 
-Pure node-level unit tests, no model quota needed (22 suites, 650+ assertions):
+Pure node-level unit tests, no model quota needed (23 suites, 660+ assertions):
 
 ```bash
 npm test                                        # all suites (node tests/run-all.mjs)
@@ -278,6 +279,7 @@ node tests/ask.test.mjs                           # ask spec/dialog/answers/appr
 node tests/tool-policy.test.mjs                  # tool policy gate — 13
 node tests/todo.test.mjs                          # todo model + folding strategy — 21
 node tests/shell-output.test.mjs                  # output sanitizer — 21
+node tests/shimmer.test.mjs                     # shimmer sweep engine — 10
 node tests/truncation.test.mjs                    # tool-result spill — 13
 node tests/resume-guard.test.mjs                  # swarm resume validation — 6
 node tests/webfetch.test.mjs                      # web extraction — 12
