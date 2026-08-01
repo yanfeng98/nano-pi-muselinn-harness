@@ -3,6 +3,7 @@ const {
   applyOp,
   applyOpsToPhases,
   clonePhases,
+  hasOpenTasks,
   summarizePhases,
   formatSummary,
   phaseRomanNumeral,
@@ -301,5 +302,30 @@ check("no match: empty descriptions", !todoMatchesAnyDescription("Create scanner
 check("no match: short substring filtered", !todoMatchesAnyDescription("test", ["testing something"]));
 check("match: desc contained in content", todoMatchesAnyDescription("Create scanner module for AI", ["scanner module"]));
 check("match: CJK contained", todoMatchesAnyDescription("构建扫描器模块", ["快速构建扫描器模块的方法"]));
+// ── 9. hasOpenTasks (widget visibility) ─────────────────────────
+check("hasOpen: fresh plan has open tasks",
+  hasOpenTasks(makePhases()) === true);
+check("hasOpen: all completed -> false (widget hides)",
+  (() => {
+    const p = makePhases();
+    const r = applyOp(p, { op: "done" }); // marks all open tasks completed
+    return r.errors.length === 0 && hasOpenTasks(r.phases) === false;
+  })());
+check("hasOpen: empty phases -> false",
+  hasOpenTasks([]) === false);
+check("hasOpen: one open task among completed -> true",
+  (() => {
+    const p = makePhases();
+    applyOp(p, { op: "done" });
+    applyOp(p, { op: "init", list: [{ phase: "Follow-up", items: ["verify release"] }] });
+    return hasOpenTasks(p) === true;
+  })());
+check("hasOpen: abandoned tasks count as closed",
+  (() => {
+    const p = makePhases();
+    const r = applyOp(p, { op: "drop" }); // abandons all open tasks
+    return r.errors.length === 0 && hasOpenTasks(r.phases) === false;
+  })());
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

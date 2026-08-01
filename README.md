@@ -139,7 +139,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Auto-mode safe** — auto mode denies `ask_user_question` by policy (no unattended hangs)
 
 ### Todo
-- **Inline panel** — above-editor widget with roman-numeral phase tree (`Ⅰ. Scanner · 2/4`), `/todo toggle` expand/collapse, empty list hides widget entirely
+- **Inline panel** — above-editor widget with roman-numeral phase tree (`Ⅰ. Scanner · 2/4`), `/todo toggle` expand/collapse; the widget hides itself once there is nothing left to do (no open tasks), keeping the finished plan only in `/todo`
 - **`/todo` command** — full oh-my-pi phase model: `init`, `start`, `done`, `drop`, `rm`, `append`, `export`, `import`, `copy`, `edit`, `add_notes`, `update_details`, bare `/todo` prints Markdown
 - **`todo_list` tool** — model-driven task management with same ops
 - **Reminder system** — incomplete todos injected as `<system-reminder>` when agent stops (max 3 reminders, debounced)

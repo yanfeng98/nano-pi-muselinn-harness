@@ -362,6 +362,11 @@ export interface PhaseCounts {
   abandoned: number;
 }
 
+/** True when any task is still open (pending or in_progress). */
+export function hasOpenTasks(phases: readonly TodoPhase[]): boolean {
+  return phases.some((p) => p.tasks.some((t) => t.status === "pending" || t.status === "in_progress"));
+}
+
 export function summarizePhases(phases: readonly TodoPhase[]): PhaseCounts {
   const counts: PhaseCounts = { completed: 0, in_progress: 0, pending: 0, abandoned: 0 };
   for (const phase of phases) {

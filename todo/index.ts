@@ -29,6 +29,7 @@ import {
   formatPhaseSummaryLine,
   selectCollapsedPhaseTasks,
 
+  hasOpenTasks,
 } from "../packages/core/todo/types";
 import { swarmState } from "../packages/core/swarm/types";
 
@@ -151,7 +152,10 @@ function buildWidgetLines(theme: any): string[] | undefined {
 export function refreshWidget(): void {
   const ctx = rt.ctx;
   if (!ctx?.ui?.setWidget) return;
-  if (rt.phases.length === 0) {
+  // Hide when there is nothing left to do: no phases at all, or every task
+  // is completed/abandoned. The phase data is kept (visible via /todo) so a
+  // finished plan doesn't linger as an empty panel above the editor.
+  if (rt.phases.length === 0 || !hasOpenTasks(rt.phases)) {
     ctx.ui.setWidget("todo", undefined);
     return;
   }
@@ -328,7 +332,7 @@ export function registerTodoList(pi: any): void {
  * Called from index.ts alongside registerTodoList.
  */
 export function togglePanel(): void {
-  if (rt.phases.length === 0) return;
+  if (rt.phases.length === 0 || !hasOpenTasks(rt.phases)) return;
   rt.expanded = !rt.expanded;
   refreshWidget();
 }
