@@ -45,9 +45,13 @@ export class MuselinnEditor extends CustomEditor {
     timing: RenderTiming | null = null,
     onRender: (() => void) | null = null,
   ) {
-    // boxed needs column 0 reserved for the left │ bar (pi-tui pads rows
-    // with spaces up to paddingX; wrapWithSideBorders overlays them).
-    super(tui, theme, keybindings, { paddingX: style === "boxed" ? 1 : 0 });
+    // boxed needs column 0 reserved for the left │ bar, plus at least one
+    // space of breathing room between the bar and the text/cursor:
+    // pi-tui pads rows with spaces up to paddingX; wrapWithSideBorders
+    // replaces the outer padding columns with │, so paddingX=1 would render
+    // "│<text>│" with the cursor touching the border. paddingX=2 yields
+    // "│ <text> │".
+    super(tui, theme, keybindings, { paddingX: style === "boxed" ? 2 : 0 });
     this.tui = tui;
     this.chromeStyle = style;
     this.slots = slots;
@@ -58,10 +62,10 @@ export class MuselinnEditor extends CustomEditor {
   /**
    * pi copies the default editor's paddingX into custom editors right
    * after construction (setCustomEditorComponent). Enforce the boxed
-   * minimum here so the side bars always have a space column to land on.
+   * minimum of 2 so the │ bars never touch the text/cursor.
    */
   override setPaddingX(padding: number): void {
-    super.setPaddingX(this.chromeStyle === "boxed" ? Math.max(1, padding) : padding);
+    super.setPaddingX(this.chromeStyle === "boxed" ? Math.max(2, padding) : padding);
   }
 
   /**

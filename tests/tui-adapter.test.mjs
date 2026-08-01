@@ -74,6 +74,7 @@ function loadTs(file) {
 
 const EXT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
 const tuiMod = loadTs(`${EXT}/tui/index.ts`);
+const box = loadTs(`${EXT}/packages/core/tui/box.ts`);
 
 // ── Mocks ──────────────────────────────────────────────────────
 
@@ -175,5 +176,34 @@ describe("tui adapter: working-state render path", () => {
     assert.ok(tuiCmd, "/tui registered");
     assert.ok(tuiCmd.def.usage.includes("shimmer"), "usage mentions shimmer");
     assert.ok(tuiCmd.def.usage.includes("style"), "usage mentions style");
+  });
+
+  test("boxed editor keeps breathing room between │ bars and text/cursor", () => {
+    // pi-tui renders rows with paddingX spaces on each side, then
+    // wrapWithSideBorders replaces the outer padding columns with │.
+    // paddingX=1 would yield "│text│" (cursor touches the border); the
+    // boxed editor enforces a minimum of 2 → "│ text │".
+    const m = makeMocks();
+    tuiMod.registerTui(m.pi);
+    for (const h of m.handlers.get("session_start") ?? []) h({}, m.ctx);
+    try {
+      const editor = m.editorFactory(m.tui, m.editorTheme, m.keybindings);
+
+      // Even when pi copies the default editor's paddingX (0) into the
+      // custom editor, the boxed minimum of 2 holds.
+      editor.setPaddingX(0);
+      assert.equal(editor.getPaddingX(), 2, "boxed editor enforces paddingX >= 2");
+
+      // Row rendered by pi-tui with paddingX=2, then wrapped:
+      const lines = ["  Hello  "];
+      const wrapped = box.wrapWithSideBorders(lines, (s) => s, {});
+      assert.equal(wrapped[0], "\u2502 Hello \u2502", "│ <text> │ layout");
+    } finally {
+      for (const h of m.handlers.get("session_shutdown") ?? []) h();
+      if (tuiMod.__tuiRuntime.spinnerTimer) {
+        clearInterval(tuiMod.__tuiRuntime.spinnerTimer);
+        tuiMod.__tuiRuntime.spinnerTimer = null;
+      }
+    }
   });
 });
