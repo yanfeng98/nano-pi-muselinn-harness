@@ -128,13 +128,11 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Plan badge** — `plan` text badge on the top border while plan mode is active (no border recoloring — zero conflict with pi's thinking-level colors)
 - **Timing probe** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` records editor `render()` P50/P99; spinner only ticks at 250 ms while the agent works
 - **Shimmer working message (OMP-style)** — the working label in the editor border gets a wall-clock driven light-band sweep (`classic` cosine band or `kitt` K.I.T.T. scanner); the crest paints accent+bold so dim text stays legible mid-animation. `low: dim / mid: muted / high: accent` by default; `/tui shimmer <classic|kitt|disabled>` switches live, config persisted. Keep-alive render cadence raised to ~25fps so the sweep stays smooth even when the agent loop produces no natural renders (active streaming costs nothing extra)
-
-- **Adaptive animation frame-rate** — the keep-alive timer measures the
-  actual full-tree render cost (request→render latency EMA) and scales its
-  quiet threshold with it: small sessions keep the 200ms/10fps floor, while
-  large multi-hundred-kB sessions that take hundreds of ms per full-tree
-  render automatically throttle to ~2fps — the animation stays wall-clock
-  driven and the event loop is never hogged.
+- **Stable animation frame-rate** — the keep-alive timer uses a fixed 200ms
+  quiet gate (≈10fps ceiling): the animation cadence never changes, so it
+  cannot stutter when a one-off render latency spike occurs. Full-tree
+  renders on large sessions stay affordable, and natural streaming renders
+  cost nothing extra.
 
 > Note: a pi-spark-style BottomFiller pseudo-fullscreen was implemented, then removed — it only has visual effect when the conversation is shorter than one screen. True editor pinning needs alternate-screen support in pi-core.
 

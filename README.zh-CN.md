@@ -125,8 +125,7 @@ pi                                      # 重启 pi，然后试试：
 - **plan 徽标** — plan mode 激活时上边框显示 `plan` 文本徽标（不染边框色，与 pi 思考模式换色零冲突）
 - **性能探针** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` 统计 editor `render()` 的 P50/P99；spinner 仅在工作时以 250ms 帧率驱动
 - **Shimmer 工作消息（OMP 风格）** — 编辑器边框里的工作状态文字带墙钟驱动的光带扫描（`classic` 余弦光带或 `kitt` K.I.T.T. 扫描灯）；亮头处 accent+bold 高亮，浅色文字在动画中也清晰。默认 `low: dim / mid: muted / high: accent`；`/tui shimmer <classic|kitt|disabled>` 热切换，配置持久化。补帧节奏提升至 ~25fps，agent loop 无自然渲染时动画依然平滑（流式活跃时零额外开销）
-
-- **自适应动画帧率** — keep-alive 定时器实测全树渲染成本（请求→渲染延迟 EMA）并据此缩放静默阈值：小会话保持 200ms/10fps 下限，数十万字符的大会话（每帧全树渲染数百 ms）自动降到 ~2fps —— 动画仍由墙钟驱动，事件循环永不被占满。
+- **稳定的动画帧率** — keep-alive 使用固定 200ms 静默门（≈10fps 上限）：动画节奏恒定，偶发渲染延迟尖峰不会导致帧率突变（自适应阈值实测会因延迟噪声让动画"卡一下"，已移除）。大会话全树渲染成本可控，流式自然渲染零额外开销。
 
 > 注：曾移植 pi-spark 的 BottomFiller 伪全屏，因其只在短会话有视觉效果已移除；真正的编辑器钉底需要 alternate screen，属 pi-core 范畴。
 

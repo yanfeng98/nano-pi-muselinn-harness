@@ -40,10 +40,6 @@ interface TuiRuntime {
   runningTools: Set<string>;
   /** Wall-clock of the last pi render observed via the editor probe. */
   lastRenderAt: number;
-  /** Wall-clock when a keep-alive render was requested (undefined = none in flight). */
-  pendingRenderAt: number | undefined;
-  /** EMA of request→render latency (ms) — the full-tree render cost signal. */
-  renderCostEma: number;
   spinnerTimer: ReturnType<typeof setInterval> | null;
 }
 
@@ -59,8 +55,6 @@ const rt: TuiRuntime = {
   workingMessage: undefined,
   runningTools: new Set(),
   lastRenderAt: 0,
-  pendingRenderAt: undefined,
-  renderCostEma: 0,
   spinnerTimer: null,
 };
 
@@ -177,15 +171,7 @@ export function applyStyleToUi(ui: TuiUiLike, style: EditorStyle): void {
       style,
       { left: slotLeft, right: slotRight },
       isTimingEnabled() ? renderTiming : null,
-      () => {
-        const now = performance.now();
-        if (rt.pendingRenderAt !== undefined) {
-          const cost = now - rt.pendingRenderAt;
-          rt.renderCostEma = rt.renderCostEma === 0 ? cost : rt.renderCostEma * 0.8 + cost * 0.2;
-          rt.pendingRenderAt = undefined;
-        }
-        rt.lastRenderAt = now;
-      },
+      () => { rt.lastRenderAt = performance.now(); },
     );
     return rt.editor;
   });
@@ -208,19 +194,14 @@ function startSpinner(): void {
   // timer exists solely to cover quiet gaps (long tool executions with no
   // streaming).
   //
-  // Adaptive gate: the quiet threshold scales with the measured full-tree
-  // render cost (request→render latency EMA, tracked by the editor probe).
-  // Small sessions render in ~1ms → threshold stays at the 200ms floor
-  // (~10fps keep-alive); a large ~800k-context session that costs 200ms per
-  // full-tree render raises the threshold so keep-alive drops to ~2fps —
-  // the animation still ticks (wall-clock driven), but the event loop is
-  // never hogged. Natural streaming renders are unaffected either way.
+  // Fixed gate (not adaptive): a constant 200ms quiet threshold keeps the
+  // keep-alive cadence stable at ~10fps. Adaptive thresholds based on
+  // measured render latency were tried and removed — request→render
+  // latency is noisy (async coalescing, GC, terminal I/O), and any single
+  // spike raised the threshold for a second or more, making the animation
+  // visibly stutter right after the spike even on fast sessions.
   rt.spinnerTimer = setInterval(() => {
-    const now = performance.now();
-    const cost = rt.renderCostEma || KEEP_ALIVE_QUIET_MS;
-    const quietThreshold = Math.max(KEEP_ALIVE_QUIET_MS, Math.min(2000, cost * 1.5));
-    if (!rt.working || now - rt.lastRenderAt < quietThreshold) return;
-    rt.pendingRenderAt = now;
+    if (!shouldKeepAliveRender(rt.working, rt.lastRenderAt, performance.now())) return;
     try { rt.tui?.requestRender(); } catch { /* stale tui */ }
   }, KEEP_ALIVE_INTERVAL_MS);
 }
