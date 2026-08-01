@@ -292,7 +292,8 @@ export function registerTodoList(pi: any): void {
     label: "Todo List",
     promptSnippet: "todo_list: manage a phased task plan (init / start / done / drop / rm / append / view)",
     promptGuidelines: [
-      "Use op=init with list=[{phase, items}] to initialize a full phased plan covering the whole request",
+      "Use op=init with list=[{phase, items}] to initialize a full phased plan covering the whole request — list is the ONLY field for init; each entry MUST have both phase and items",
+      "For a single-phase init use list=[{phase, items}] too (one entry) — never pass objects in the top-level items field (it only takes plain strings)",
       "Use op=start task=... to mark a task in_progress (only one in_progress at a time)",
       "Use op=done task=... to mark a task completed; omit task to mark all open tasks done",
       "Use op=append phase=... items=[...] to add tasks to an existing phase",
@@ -309,7 +310,7 @@ export function registerTodoList(pi: any): void {
         },
         list: {
           type: "array",
-          description: "Phased task list (for init): [{phase, items}]",
+          description: "Phased task list for op=init: [{phase, items}] — each object requires BOTH phase (string) and items (string[])",
           items: {
             type: "object",
             properties: {
@@ -330,7 +331,7 @@ export function registerTodoList(pi: any): void {
         items: {
           type: "array",
           items: { type: "string" },
-          description: "Tasks to append (for append, or flat init fallback)",
+          description: "Plain string tasks ONLY — for op=append (add to a phase), never for init. For init use list=[{phase, items}].",
         },
         notes: {
           type: "array",
