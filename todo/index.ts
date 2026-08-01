@@ -30,6 +30,7 @@ import {
   selectCollapsedPhaseTasks,
 
   hasOpenTasks,
+  removeClosedTasks,
 } from "../packages/core/todo/types";
 import { swarmState } from "../packages/core/swarm/types";
 
@@ -84,7 +85,14 @@ function buildWidgetLines(theme: any): string[] | undefined {
       const phase = phases[i];
       lines.push(formatPhaseSummaryLine(phase, i + 1, phases.length > 1, theme));
     }
-    lines.push(theme.fg("dim", `${EXPAND_KEY} expand · /todo rm to clear`));
+    const clearDelay = todoClearDelaySeconds();
+    const clearHint =
+      clearDelay < 0
+        ? ` /todo rm to clear`
+        : clearDelay > 0
+          ? ` auto-clears in ${clearDelay}s`
+          : "";
+    lines.push(theme.fg("dim", `${EXPAND_KEY} expand${clearHint}`));
     return lines;
   }
 
@@ -152,15 +160,66 @@ function buildWidgetLines(theme: any): string[] | undefined {
 export function refreshWidget(): void {
   const ctx = rt.ctx;
   if (!ctx?.ui?.setWidget) return;
-  // Hide when there is nothing left to do: no phases at all, or every task
-  // is completed/abandoned. The phase data is kept (visible via /todo) so a
-  // finished plan doesn't linger as an empty panel above the editor.
-  if (rt.phases.length === 0 || !hasOpenTasks(rt.phases)) {
+  // Hide only when there is nothing to render. A finished plan stays visible
+  // briefly (completion state) and is then removed by the auto-clear timer —
+  // OMP parity: closed todos fade out of the HUD instead of lingering.
+  if (rt.phases.length === 0) {
     ctx.ui.setWidget("todo", undefined);
     return;
   }
   const theme = ctx.ui?.theme || {};
   ctx.ui.setWidget("todo", buildWidgetLines(theme));
+}
+
+// ── Auto-clear (OMP tasks.todoClearDelay parity) ───────────────
+// PI_MUSELINN_TODO_CLEAR_DELAY seconds after a task completes/abandons, the
+// closed tasks are removed from the plan (empty phases dropped) and persisted.
+//   0  = instant (same as /todo rm for closed items)
+//  -1  = never (manual /todo rm)
+// default 60s, matching OMP's tasks.todoClearDelay default.
+let todoClearTimer: ReturnType<typeof setTimeout> | null = null;
+
+function todoClearDelaySeconds(): number {
+  const raw = process.env.PI_MUSELINN_TODO_CLEAR_DELAY;
+  if (raw === undefined || raw === "") return 60;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : 60;
+}
+
+function cancelTodoClearTimer(): void {
+  if (todoClearTimer) {
+    clearTimeout(todoClearTimer);
+    todoClearTimer = null;
+  }
+}
+
+function applyTodoAutoClear(): void {
+  todoClearTimer = null;
+  const next = removeClosedTasks(rt.phases);
+  rt.phases = next;
+  persist();
+  refreshWidget();
+}
+
+/** (Re)arm the auto-clear timer from current phase state. Call after every todo mutation. */
+export function syncTodoAutoClearTimer(): void {
+  cancelTodoClearTimer();
+  const delay = todoClearDelaySeconds();
+  if (delay < 0) return; // never
+  const hasClosed = rt.phases.some((p) => p.tasks.some((t) => t.status === "completed" || t.status === "abandoned"));
+  if (!hasClosed) return;
+  if (delay === 0) {
+    applyTodoAutoClear();
+    return;
+  }
+  todoClearTimer = setTimeout(() => {
+    applyTodoAutoClear();
+  }, delay * 1000);
+  todoClearTimer.unref?.();
+}
+
+export function cancelTodoAutoClear(): void {
+  cancelTodoClearTimer();
 }
 
 // ── Persistence ────────────────────────────────────────────────
@@ -215,6 +274,7 @@ export function bindTodoSession(ctx: any, appendEntry: (type: string, data: any)
 }
 
 export function clearTodoSession(): void {
+  cancelTodoAutoClear();
   rt.phases = [];
   rt.reminderCount = 0;
   rt.reminderPending = false;
@@ -298,6 +358,7 @@ export function registerTodoList(pi: any): void {
       rt.phases = phases;
       persist();
       refreshWidget();
+      syncTodoAutoClearTimer();
 
       // Reset reminder tracking on successful todo mutation
       rt.reminderCount = 0;
@@ -332,7 +393,7 @@ export function registerTodoList(pi: any): void {
  * Called from index.ts alongside registerTodoList.
  */
 export function togglePanel(): void {
-  if (rt.phases.length === 0 || !hasOpenTasks(rt.phases)) return;
+  if (rt.phases.length === 0) return;
   rt.expanded = !rt.expanded;
   refreshWidget();
 }

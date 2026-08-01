@@ -51,7 +51,7 @@ import { registerHooks, hookEngine } from "./packages/core/hooks/index";
 import { registerAskUserQuestion, showQuestionDialog } from "./ask/index";
 import { approvalTitleFor } from "./packages/core/ask/types";
 import { shouldTruncate, truncationPathFor, buildTruncatedPreview } from "./packages/core/truncation/index";
-import { registerTodoList, registerTodoReminders, bindTodoSession, clearTodoSession, restoreTodos, rt, persist, refreshWidget, togglePanel } from "./todo/index";
+import { registerTodoList, registerTodoReminders, bindTodoSession, clearTodoSession, restoreTodos, rt, persist, refreshWidget, togglePanel, syncTodoAutoClearTimer } from "./todo/index";
 import { registerFetchUrl } from "./webfetch/index";
 import { phasesToMarkdown, markdownToPhases, applyOp, TodoPhase, TodoItem } from "./packages/core/todo/types";
 import { loadPlugins, injectPluginSessionStart, registerPluginCommand, getPluginSkillFiles } from "./plugin/index";
@@ -348,6 +348,7 @@ export default function (pi: ExtensionAPI) {
     // Restore the todo panel (before binding so the first refresh shows it)
     try {
       restoreTodos(ctx.sessionManager.getEntries());
+      syncTodoAutoClearTimer();
     } catch { /* ok */ }
     try {
       bindTodoSession(ctx, (type, data) => { try { pi.appendEntry(type, data); } catch { /* stale ctx */ } });

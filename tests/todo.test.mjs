@@ -4,6 +4,7 @@ const {
   applyOpsToPhases,
   clonePhases,
   hasOpenTasks,
+  removeClosedTasks,
   summarizePhases,
   formatSummary,
   phaseRomanNumeral,
@@ -325,6 +326,38 @@ check("hasOpen: abandoned tasks count as closed",
     const p = makePhases();
     const r = applyOp(p, { op: "drop" }); // abandons all open tasks
     return r.errors.length === 0 && hasOpenTasks(r.phases) === false;
+  })());
+
+// ── 10. removeClosedTasks (OMP auto-clear parity) ──────────────
+check("autoclear: completed tasks removed, open kept",
+  (() => {
+    const p = makePhases(); // has several open tasks
+    const r = applyOp(p, { op: "done", task: p[0].tasks[0].content }); // complete one
+    const next = removeClosedTasks(r.phases);
+    const all = next.flatMap((ph) => ph.tasks);
+    return all.length === r.phases.flatMap((ph) => ph.tasks).length - 1 &&
+      all.every((t) => t.status === "pending" || t.status === "in_progress");
+  })());
+check("autoclear: all closed -> phases empty",
+  (() => {
+    const p = makePhases();
+    const r = applyOp(p, { op: "done" });
+    return removeClosedTasks(r.phases).length === 0;
+  })());
+check("autoclear: empty phase dropped when its last task closes",
+  (() => {
+    const p = [{ name: "Only", tasks: [{ content: "solo", status: "pending" }] }];
+    const r = applyOp(p, { op: "done" });
+    return removeClosedTasks(r.phases).length === 0;
+  })());
+check("autoclear: untouched phases keep their tasks",
+  (() => {
+    const p = makePhases();
+    const r = applyOp(p, { op: "done" }); // all done
+    // Re-open by adding a fresh phase: closed phase dropped, new phase kept.
+    const mixed = applyOp(r.phases, { op: "init", list: [{ phase: "New", items: ["task-a"] }] });
+    const next = removeClosedTasks(mixed.phases);
+    return next.length === 1 && next[0].name === "New" && next[0].tasks.length === 1;
   })());
 
 console.log(`\n${pass} passed, ${fail} failed`);

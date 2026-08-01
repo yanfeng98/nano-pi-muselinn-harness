@@ -138,7 +138,7 @@ pi                                      # 重启 pi，然后试试：
 - **auto 模式安全** — auto 模式下 `ask_user_question` 被策略专门拒绝（防无人值守卡死）
 
 ### Todo 模块（内联任务计划）
-- **内联面板** — 编辑器上方 widget，罗马数字阶段树（`Ⅰ. Scanner · 2/4`），`/todo toggle` 展开/折叠；无未完成任务时面板自动隐藏（完成的计划只保留在 `/todo` 里）
+- **内联面板** — 编辑器上方 widget，罗马数字阶段树（`Ⅰ. Scanner · 2/4`），`/todo toggle` 展开/折叠；完成的任务在 `PI_MUSELINN_TODO_CLEAR_DELAY` 秒后自动清除（默认 60，`0`=立即，`-1`=手动）—— 完成的计划自动淡出，不再残留
 - **`/todo` 命令** — 完整 oh-my-pi 阶段模型：`init` / `start` / `done` / `drop` / `rm` / `append` / `export` / `import` / `copy` / `edit` / `add_notes` / `update_details`，裸 `/todo` 打印 Markdown
 - **`todo_list` 工具** — 模型驱动的任务管理，同一套操作
 - **提醒系统** — agent 停下时未完成 todo 以 `<system-reminder>` 注入下一轮（最多 3 次，防抖）

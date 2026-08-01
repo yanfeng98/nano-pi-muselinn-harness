@@ -362,6 +362,20 @@ export interface PhaseCounts {
   abandoned: number;
 }
 
+/**
+ * Drop completed/abandoned tasks; phases left with no tasks are removed.
+ * OMP parity (`tasks.todoClearDelay` auto-clear): finished work fades out of
+ * the HUD instead of lingering. Pure — returns a new array.
+ */
+export function removeClosedTasks(phases: readonly TodoPhase[]): TodoPhase[] {
+  const next: TodoPhase[] = [];
+  for (const phase of phases) {
+    const tasks = phase.tasks.filter((t) => t.status !== "completed" && t.status !== "abandoned");
+    if (tasks.length > 0) next.push({ name: phase.name, tasks });
+  }
+  return next;
+}
+
 /** True when any task is still open (pending or in_progress). */
 export function hasOpenTasks(phases: readonly TodoPhase[]): boolean {
   return phases.some((p) => p.tasks.some((t) => t.status === "pending" || t.status === "in_progress"));
