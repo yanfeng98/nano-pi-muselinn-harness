@@ -291,15 +291,6 @@ node tests/stream-rules.test.mjs                  # 流式 entry 规则 14 项
 
 测试支持 Node 20/22/24（20 走 `tests/ts-esm-loader.mjs` TypeScript 转译 ESM loader；22.6+ 原生擦除类型）。CI 在每次 push 和 PR 上跑完整矩阵——ubuntu + windows × node 20/22。
 
-## 发布流程（维护者）
-
-打 tag 标记发布（已移除 CI 发布—本地 OTP 发布）：
-
-```bash
-npm run version-patch                              # 升级 package.json + lock（如 0.9.16 → 0.9.17）
-git tag v$(node -p "require('./package.json').version")
-git push origin main --tags                        # 推送 tag 触发 CI 并自动创建 GitHub Release
-```
 
 ## Roadmap
 

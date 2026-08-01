@@ -345,15 +345,6 @@ Design and implementation inspired by these open-source projects:
 
 **Note**: this extension is mostly an independent implementation. Exception: `tui/box.ts`'s `wrapWithSideBorders` is ported from Kimi Code (MIT), with attribution kept in comments and used under the MIT license.
 
-## Releasing (maintainers)
-
-Tag to mark the release (CI publish removed — publish locally with OTP):
-
-```bash
-npm run version-patch                              # bumps package.json + lock (e.g. 0.9.16 → 0.9.17)
-git tag v$(node -p "require('./package.json').version")
-git push origin main --tags                        # tag push runs CI + auto-creates the GitHub Release
-```
 
 ## Changelog
 

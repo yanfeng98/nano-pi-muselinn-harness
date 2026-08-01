@@ -234,3 +234,17 @@ per subagent. Active agent count shown in the status bar (`[3 agents running]`).
 
 
 ![Closed-box editor with streaming state in the top border](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
+
+
+---
+
+## Releasing (maintainers)
+
+Tag to mark the release (CI publish removed — publish locally with OTP):
+
+```bash
+npm run version-patch                              # bumps package.json + lock (e.g. 0.9.16 → 0.9.17)
+git tag v$(node -p "require('./package.json').version")
+git push origin main --tags                        # tag push runs CI + auto-creates the GitHub Release
+npm publish                                        # manual publish with OTP
+```
