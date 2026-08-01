@@ -239,9 +239,14 @@ check("parse: timing", parse.parseTuiArgs("timing").kind === "timing");
 // ══════════════════════════════════════════════════════════════
 const tcomp = completions.tuiArgumentCompletions;
 check("completions: empty → all subcommands",
-  tcomp("").length === 2, String(tcomp("").length));
+  tcomp("").length === 3, String(tcomp("").length));
 check("completions: prefix filters",
   tcomp("t").length === 1 && tcomp("t")[0].value === "timing", JSON.stringify(tcomp("t")));
+check("completions: shimmer prefix → full-string values",
+  tcomp("shimmer ").every((i) => i.value.startsWith("shimmer ")) && tcomp("shimmer ").length === 3,
+  JSON.stringify(tcomp("shimmer ")));
+check("completions: shimmer partial filters",
+  tcomp("shimmer k").length === 1 && tcomp("shimmer k")[0].value === "shimmer kitt");
 check("completions: style prefix → full-string values",
   tcomp("style ").every((i) => i.value.startsWith("style ")) && tcomp("style ").length === 3,
   JSON.stringify(tcomp("style ")));

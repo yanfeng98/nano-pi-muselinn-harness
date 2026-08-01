@@ -133,7 +133,14 @@ export function planArgumentCompletions(prefix: string): CompletionItem[] | null
 
 const TUI_SUBCOMMANDS: CompletionItem[] = [
   { value: "style", label: "style <plain|boxed|compact>", description: "Editor chrome style" },
+  { value: "shimmer", label: "shimmer <classic|kitt|disabled>", description: "Working-message sweep animation" },
   { value: "timing", label: "timing", description: "Render timing stats (PI_MUSELINN_HARNESS_TUI_TIMING=1)" },
+];
+
+const TUI_SHIMMER_MODES: CompletionItem[] = [
+  { value: "classic", label: "classic", description: "Cosine light band sweeping left → right" },
+  { value: "kitt", label: "kitt", description: "K.I.T.T. scanner (bright head + trail)" },
+  { value: "disabled", label: "disabled", description: "Static dim text (no animation)" },
 ];
 
 const TUI_STYLES: CompletionItem[] = [
@@ -167,6 +174,17 @@ export function tuiArgumentCompletions(prefix: string): CompletionItem[] | null 
       description: s.description,
     }));
     return filterCompletions(styleItems, stylePrefix);
+  }
+
+  if (tokens[0].toLowerCase() === "shimmer") {
+    if (tokens.length >= 2 && endsWithSpace) return null; // shimmer already done
+    const modePrefix = tokens[1] ?? "";
+    const modeItems = TUI_SHIMMER_MODES.map((s) => ({
+      value: `shimmer ${s.value}`,
+      label: s.label,
+      description: s.description,
+    }));
+    return filterCompletions(modeItems, modePrefix);
   }
 
   return null;

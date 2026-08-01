@@ -92,7 +92,7 @@ function slotLeft(): string {
       // the dim message stays legible exactly where the light passes — no
       // need for brighter idle colors. Wall-clock driven, so it stays smooth
       // even when the agent loop stalls a render.
-      const mode = rt.config.shimmer;
+      const mode = rt.shimmer;
       if (mode !== "disabled") {
         parts.push(
           shimmerText(
@@ -292,7 +292,7 @@ export function registerTui(pi: ExtensionAPI): void {
 
   pi.registerCommand("tui", {
     description: "Switch editor chrome (Kimi Code-style boxed editor)",
-    usage: "/tui style <plain|boxed|compact> | /tui timing",
+    usage: "/tui [style <plain|boxed|compact> | shimmer <classic|kitt|disabled> | timing]",
     getArgumentCompletions: (prefix: string) => tuiArgumentCompletions(prefix),
     handler: async (args: string, ctx: any) => {
       if (!ctx?.hasUI) return;
@@ -300,7 +300,15 @@ export function registerTui(pi: ExtensionAPI): void {
 
       switch (cmd.kind) {
         case "status": {
-          const lines = [`tui: style=${rt.style} · modelInBorder=${rt.modelInBorder} · shimmer=${rt.shimmer}`];
+          const lines = [
+            `tui: style=${rt.style} · modelInBorder=${rt.modelInBorder} · shimmer=${rt.shimmer}`,
+            "",
+            "usage:",
+            "  /tui                          show this status",
+            "  /tui style <plain|boxed|compact>",
+            "  /tui shimmer <classic|kitt|disabled>   working-message sweep",
+            "  /tui timing                   render timing (PI_MUSELINN_HARNESS_TUI_TIMING=1)",
+          ];
           if (isTimingEnabled()) lines.push(renderTiming.format());
           ctx.ui.notify(lines.join("\n"), "info");
           break;

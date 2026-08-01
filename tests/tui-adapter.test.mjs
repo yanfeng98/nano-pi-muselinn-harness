@@ -1,0 +1,179 @@
+// ============================================================
+// TUI adapter integration — regression test for the working-state
+// render path (slotLeft → shimmer). Guards against crashes like
+// "Cannot read properties of undefined (reading 'shimmer')" when the
+// editor border renders while the agent is working.
+// ============================================================
+
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { createRequire } from "node:module";
+import { test, describe } from "node:test";
+import * as assert from "node:assert/strict";
+
+import { jitiUrl } from "./jiti-path.mjs";
+const { createJiti } = await import(jitiUrl());
+const jiti = createJiti(import.meta.url ?? __filename, { moduleCache: false });
+const nativeRequire = createRequire(import.meta.url);
+const moduleCache = new Map();
+
+function resolveSpec(spec, parentFile) {
+  if (!spec.startsWith(".")) return { native: spec };
+  const clean = spec.endsWith(".js") ? spec.slice(0, -3) : spec;
+  const base = path.resolve(path.dirname(parentFile), clean);
+  for (const c of [base + ".ts", base + ".js", base]) {
+    if (fs.existsSync(c) && fs.statSync(c).isFile()) return { file: c };
+  }
+  throw new Error(`Cannot resolve ${spec} from ${parentFile}`);
+}
+
+// Minimal stand-in for pi's CustomEditor (ESM-only in the installed SDK,
+// not loadable via CJS require in this suite). Mirrors the surface
+// MuselinnEditor uses: constructor(tui, theme, options), borderColor,
+// paddingX, setText/getText, isShowingAutocomplete, render(width).
+class MockCustomEditor {
+  constructor(tui, theme, options = {}) {
+    this.tui = tui;
+    this.theme = theme;
+    this.paddingX = options.paddingX ?? 0;
+    this.actionHandlers = new Map();
+    this.text = "";
+    this.borderColor = (s) => s;
+  }
+  setText(t) { this.text = t; }
+  getText() { return this.text; }
+  setPaddingX(p) { this.paddingX = p; }
+  getPaddingX() { return this.paddingX; }
+  setAutocompleteMaxVisible() {}
+  setAutocompleteProvider() {}
+  isShowingAutocomplete() { return false; }
+  render(width) {
+    const pad = " ".repeat(Math.min(this.paddingX, Math.max(0, Math.floor((width - 1) / 2))));
+    const content = pad + (this.text || "");
+    return ["\u2500".repeat(width), content];
+  }
+}
+
+const MOCK_PI_CODING_AGENT = { CustomEditor: MockCustomEditor };
+
+function loadTs(file) {
+  const key = path.resolve(file);
+  if (moduleCache.has(key)) return moduleCache.get(key).exports;
+  const code = jiti.transform({ source: fs.readFileSync(key, "utf8"), filename: key, ts: true });
+  const module = { exports: {} };
+  moduleCache.set(key, module);
+  const localRequire = (spec) => {
+    if (spec === "@earendil-works/pi-coding-agent") return MOCK_PI_CODING_AGENT;
+    const r = resolveSpec(spec, key);
+    return r.native ? nativeRequire(spec) : loadTs(r.file);
+  };
+  new Function("exports", "require", "module", "__filename", "__dirname", code)(
+    module.exports, localRequire, module, key, path.dirname(key));
+  return module.exports;
+}
+
+const EXT = path.resolve(path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1")), "..");
+const tuiMod = loadTs(`${EXT}/tui/index.ts`);
+
+// ── Mocks ──────────────────────────────────────────────────────
+
+function makeMocks() {
+  const handlers = new Map();
+  const commands = [];
+  const pi = {
+    on(event, handler) {
+      if (!handlers.has(event)) handlers.set(event, []);
+      handlers.get(event).push(handler);
+    },
+    registerCommand(name, def) {
+      commands.push({ name, def });
+    },
+    getThinkingLevel() { return "off"; },
+  };
+
+  let editorFactory = null;
+  // Real ANSI 256-color sequences (mirrors pi's Theme.getFgAnsi).
+  const ANSI = { dim: 240, muted: 245, accent: 81, warning: 214 };
+  const theme = {
+    fg: (color, text) => `\x1b[38;5;${ANSI[color] ?? 240}m${text}\x1b[39m`,
+    getFgAnsi: (color) => `\x1b[38;5;${ANSI[color] ?? 240}m`,
+    bold: (s) => `\x1b[1m${s}\x1b[22m`,
+  };
+  const ui = {
+    setEditorComponent(f) { editorFactory = f; },
+    setWorkingVisible() {},
+    theme,
+  };
+  const ctx = {
+    hasUI: true,
+    sessionManager: { getCwd: () => "/tmp" },
+    ui,
+  };
+
+  const tui = {
+    terminal: { rows: 24, columns: 84 },
+    requestRender() {},
+  };
+  const keybindings = {};
+  const editorTheme = { borderColor: (s) => s, selectList: {} };
+
+  return { handlers, commands, pi, ui, ctx, tui, keybindings, editorTheme,
+    get editorFactory() { return editorFactory; } };
+}
+
+describe("tui adapter: working-state render path", () => {
+  test("editor border renders with shimmer while working (no crash, shimmer ANSI present)", () => {
+    const m = makeMocks();
+    tuiMod.registerTui(m.pi);
+    // Always stop the keep-alive timer so this suite's process can exit,
+    // even when an assertion below fails.
+    try {
+      // session_start → loads config, registers the boxed editor factory.
+      for (const h of m.handlers.get("session_start") ?? []) h({}, m.ctx);
+      assert.ok(m.editorFactory, "editor factory registered");
+
+      // agent starts working, message streaming begins.
+      for (const h of m.handlers.get("agent_start") ?? []) h();
+      for (const h of m.handlers.get("message_update") ?? []) {
+        h({ assistantMessageEvent: { type: "text_start" } });
+      }
+      // Force a long working message so the shimmer band is inside the text.
+      tuiMod.__tuiRuntime.workingMessage = "Running tools";
+
+      // Build the editor and render the border — this exercises slotLeft.
+      let editor;
+      assert.doesNotThrow(() => {
+        editor = m.editorFactory(m.tui, m.editorTheme, m.keybindings);
+        editor.render(84);
+      }, "rendering the editor border while working must not throw");
+
+      // The shimmer path emits themed ANSI for the message (accent crest etc).
+      const out = editor.render(84).join("\n");
+      const plain = out.replace(/\x1b\[[0-9;]*m/g, "");
+      assert.ok(plain.includes("Running tools"), "working message present in border");
+      assert.ok(/\x1b\[38;5;\d+m/.test(out), "shimmer/theme ANSI present in border output");
+      // Border alignment: top border stays exactly 84ch (ANSI stripped).
+      assert.equal([...plain.split("\n")[0]].length, 84, "top border is 84ch");
+
+      // Stop working → idle border renders fine too.
+      for (const h of m.handlers.get("agent_settled") ?? []) h();
+      assert.doesNotThrow(() => editor.render(84), "idle render must not throw");
+    } finally {
+      // Stop the keep-alive timer so the test process can exit.
+      for (const h of m.handlers.get("session_shutdown") ?? []) h();
+      if (tuiMod.__tuiRuntime.spinnerTimer) {
+        clearInterval(tuiMod.__tuiRuntime.spinnerTimer);
+        tuiMod.__tuiRuntime.spinnerTimer = null;
+      }
+    }
+  });
+
+  test("/tui command exposes shimmer subcommand with usage", () => {
+    const m = makeMocks();
+    tuiMod.registerTui(m.pi);
+    const tuiCmd = m.commands.find((c) => c.name === "tui");
+    assert.ok(tuiCmd, "/tui registered");
+    assert.ok(tuiCmd.def.usage.includes("shimmer"), "usage mentions shimmer");
+    assert.ok(tuiCmd.def.usage.includes("style"), "usage mentions style");
+  });
+});
