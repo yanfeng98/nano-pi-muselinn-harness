@@ -8,6 +8,17 @@ title: Changelog — pi-muselinn-harness
 <p>All notable changes, in reverse chronological order. The full file lives at
 <a href="https://github.com/MuseLinn/pi-muselinn-harness/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
 
+## 0.9.15
+
+**Todo widget auto-clear (OMP parity):**
+- Closed (completed/abandoned) tasks are now removed from the plan after
+  `PI_MUSELINN_TODO_CLEAR_DELAY` seconds (default 60, `0` = instant,
+  `-1` = manual `/todo rm`) — finished plans fade out of the above-editor
+  panel instead of lingering. The completion state shows briefly with a
+  live countdown hint. New pure helper `removeClosedTasks()`; the timer is
+  re-armed on every todo mutation and session restore, cancelled on session
+  end.
+
 ## 0.9.14
 
 **Startup fix:**
