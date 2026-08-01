@@ -127,14 +127,8 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **`/tui` command** — hot-switch styles without restarting (pi preserves text/focus/keybindings when swapping editors); `/tui timing` shows render timing; config persisted to `~/.pi/agent/muselinn-tui.json` (project `.pi/` override)
 - **Plan badge** — `plan` text badge on the top border while plan mode is active (no border recoloring — zero conflict with pi's thinking-level colors)
 - **Timing probe** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` records editor `render()` P50/P99; spinner only ticks at 250 ms while the agent works
-- **Shimmer working message (OMP-style)** — the working label in the editor border gets a wall-clock driven light-band sweep (`classic` cosine band or `kitt` K.I.T.T. scanner); the crest paints accent+bold so dim text stays legible mid-animation. `low: dim / mid: muted / high: accent` by default; `/tui shimmer <classic|kitt|disabled>` switches live, config persisted. Keep-alive render cadence raised to ~25fps so the sweep stays smooth even when the agent loop produces no natural renders (active streaming costs nothing extra)
-- **Stable animation frame-rate** — the keep-alive timer uses a fixed 200ms
-  quiet gate (≈10fps ceiling): the animation cadence never changes, so it
-  cannot stutter when a one-off render latency spike occurs. Full-tree
-  renders on large sessions stay affordable, and natural streaming renders
-  cost nothing extra.
-
-> Note: a pi-spark-style BottomFiller pseudo-fullscreen was implemented, then removed — it only has visual effect when the conversation is shorter than one screen. True editor pinning needs alternate-screen support in pi-core.
+- **Shimmer working message (OMP-style)** — the working label in the editor border gets a wall-clock driven light-band sweep (`classic` cosine band or `kitt` K.I.T.T. scanner); the crest paints accent+bold so dim text stays legible mid-animation. `low: dim / mid: muted / high: accent` by default; `/tui shimmer <classic|kitt|disabled>` switches live, config persisted
+- **Stable animation frame-rate** — the keep-alive timer uses a fixed 200ms quiet gate (≈10fps ceiling) so the animation cadence never changes; natural streaming renders ride pi's own frames at zero extra cost, and a stalled agent loop costs at most ~10 full-tree renders per second even on very large sessions. (Adaptive thresholds based on measured render latency were tried and rejected: latency noise made the frame rate stutter.)
 
 ### Ask (interactive questions)
 - **`ask_user_question` tool** — the agent asks 1-4 structured questions in one tabbed dialog: per-question header tabs (`1/3 · header`, ←/→/Tab to switch), numbered options with description sub-lines, `multi_select` checkboxes (Space toggles, Enter confirms), and an automatic free-text **Other** option on every question; digit keys 1-9 jump straight to an option, arrows/jk navigate, Esc cancels
