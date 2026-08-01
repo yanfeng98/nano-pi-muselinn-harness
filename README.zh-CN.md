@@ -296,7 +296,9 @@ node tests/stream-rules.test.mjs                  # 流式 entry 规则 14 项
 打 tag 标记发布（已移除 CI 发布—本地 OTP 发布）：
 
 ```bash
-npm run version-patch && git tag v0.9.13 && git push origin v0.9.13
+npm run version-patch                              # 升级 package.json + lock（如 0.9.16 → 0.9.17）
+git tag v$(node -p "require('./package.json').version")
+git push origin main --tags                        # 推送 tag 触发 CI 并自动创建 GitHub Release
 ```
 
 ## Roadmap

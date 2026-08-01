@@ -350,7 +350,9 @@ Design and implementation inspired by these open-source projects:
 Tag to mark the release (CI publish removed — publish locally with OTP):
 
 ```bash
-npm run version-patch && git tag v0.9.1 && git push origin v0.9.1
+npm run version-patch                              # bumps package.json + lock (e.g. 0.9.16 → 0.9.17)
+git tag v$(node -p "require('./package.json').version")
+git push origin main --tags                        # tag push runs CI + auto-creates the GitHub Release
 ```
 
 ## Changelog
