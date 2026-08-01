@@ -367,6 +367,8 @@
       var top = paint("\u256D") + dash(1) + " " + left + " " + dash(fill2) + " " + right + " " + dash(1) + paint("\u256E");
       var blank = paint("\u2502") + " ".repeat(innerW) + paint("\u2502");
       var bottom = paint("\u2570") + dash(innerW) + paint("\u256F");
+      // Prompt chevron on the first content line (real harness: │❯ text │).
+      blank = paint("\u2502") + paint("\u276F") + " ".repeat(innerW - 1) + paint("\u2502");
       editorHtml = top + "\n" + blank + "\n" + bottom + "\n";
     }
 

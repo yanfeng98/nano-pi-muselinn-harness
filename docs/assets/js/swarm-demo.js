@@ -281,8 +281,9 @@ const PiTui = {
       top = paint('\u256D') + dash(innerW) + paint('\u256E');
     }
     const blank = paint('\u2502') + ' '.repeat(innerW) + paint('\u2502');
-    const innerPad = Math.max(0, innerW - 1 - vis(inner));
-    const content = paint('\u2502') + ' ' + inner + ' '.repeat(innerPad) + paint('\u2502');
+    const innerPad = Math.max(0, innerW - 2 - vis(inner));
+    // Prompt chevron in the padding slot (real harness: │❯ text │).
+    const content = paint('\u2502') + paint('\u276F') + ' ' + inner + ' '.repeat(innerPad) + paint('\u2502');
     const bottom = paint('\u2570') + dash(innerW) + paint('\u256F');
     return `${top}\n${content}\n${blank}\n${bottom}\n`;
   },

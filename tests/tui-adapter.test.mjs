@@ -124,7 +124,7 @@ function makeMocks() {
 }
 
 describe("tui adapter: working-state render path", () => {
-  test("editor border renders with shimmer while working (no crash, shimmer ANSI present)", () => {
+  test("editor border renders with shimmer while working (no crash, shimmer ANSI present)", async () => {
     const m = makeMocks();
     tuiMod.registerTui(m.pi);
     // Always stop the keep-alive timer so this suite's process can exit,
@@ -139,6 +139,10 @@ describe("tui adapter: working-state render path", () => {
       for (const h of m.handlers.get("message_update") ?? []) {
         h({ assistantMessageEvent: { type: "text_start" } });
       }
+      // Let the keep-alive timer fire at least once — regression guard for
+      // undefined-reference crashes in the timer callback (e.g. a missing
+      // import like KEEP_ALIVE_QUIET_MS only surfaces when the timer runs).
+      await new Promise((r) => setTimeout(r, 150));
       // Force a long working message so the shimmer band is inside the text.
       tuiMod.__tuiRuntime.workingMessage = "Running tools";
 

@@ -12,7 +12,7 @@
 // ============================================================
 
 import { type EditorStyle } from "../packages/core/tui/box";
-import { shouldKeepAliveRender, wallClockFrameIndex, KEEP_ALIVE_INTERVAL_MS } from "../packages/core/tui/keepalive";
+import { shouldKeepAliveRender, wallClockFrameIndex, KEEP_ALIVE_QUIET_MS, KEEP_ALIVE_INTERVAL_MS } from "../packages/core/tui/keepalive";
 import { shimmerText, type ShimmerMode } from "../packages/core/tui/shimmer";
 import { loadTuiConfig, saveTuiConfig, type TuiConfig } from "../packages/core/tui/config";
 import { MuselinnEditor } from "./editor";

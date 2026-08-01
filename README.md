@@ -121,10 +121,20 @@ tools are model-callable, all commands are slash commands with Tab completion.
 
 ### TUI
 - **Closed-box editor** — Kimi Code's `wrapWithSideBorders` ported: pi-tui's horizontal-only borders post-processed into a `╭╮│╰╯` closed box; spinner + working state (Thinking/Streaming/Running tools) embedded in the top border; three styles `plain | boxed | compact` (pi-spark-style info border = compact), default boxed; model name opt-in via `"modelInBorder": true`
+
+  The first content line carries a prompt chevron (`│❯ text │`), padding is
+  clamped to ≥2 so the bars never touch the text or cursor.
 - **`/tui` command** — hot-switch styles without restarting (pi preserves text/focus/keybindings when swapping editors); `/tui timing` shows render timing; config persisted to `~/.pi/agent/muselinn-tui.json` (project `.pi/` override)
 - **Plan badge** — `plan` text badge on the top border while plan mode is active (no border recoloring — zero conflict with pi's thinking-level colors)
 - **Timing probe** — `PI_MUSELINN_HARNESS_TUI_TIMING=1` records editor `render()` P50/P99; spinner only ticks at 250 ms while the agent works
 - **Shimmer working message (OMP-style)** — the working label in the editor border gets a wall-clock driven light-band sweep (`classic` cosine band or `kitt` K.I.T.T. scanner); the crest paints accent+bold so dim text stays legible mid-animation. `low: dim / mid: muted / high: accent` by default; `/tui shimmer <classic|kitt|disabled>` switches live, config persisted. Keep-alive render cadence raised to ~25fps so the sweep stays smooth even when the agent loop produces no natural renders (active streaming costs nothing extra)
+
+- **Adaptive animation frame-rate** — the keep-alive timer measures the
+  actual full-tree render cost (request→render latency EMA) and scales its
+  quiet threshold with it: small sessions keep the 200ms/10fps floor, while
+  large multi-hundred-kB sessions that take hundreds of ms per full-tree
+  render automatically throttle to ~2fps — the animation stays wall-clock
+  driven and the event loop is never hogged.
 
 > Note: a pi-spark-style BottomFiller pseudo-fullscreen was implemented, then removed — it only has visual effect when the conversation is shorter than one screen. True editor pinning needs alternate-screen support in pi-core.
 
