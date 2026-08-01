@@ -54,6 +54,40 @@ title: pi-muselinn-harness
   </div>
 </div>
 
+<h2><span data-l="en">Quick start</span><span data-l="zh">快速开始</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Install</span><span data-l="zh">安装</span>
+<span data-l="en">One command, zero companion extensions. Restart pi and you're done.</span><span data-l="zh">一条命令，无需任何伴随扩展。重启 pi 即可。</span>
+
+```bash
+pi install npm:pi-muselinn-harness
+```
+
+<span data-l="en">Or from source: <code>pi install git:github.com/MuseLinn/pi-muselinn-harness</code></span><span data-l="zh">或源码安装：<code>pi install git:github.com/MuseLinn/pi-muselinn-harness</code></span>
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">Try it</span><span data-l="zh">体验</span>
+<span data-l="en">Everything is a slash command or a model-callable tool — no config files to learn first.</span><span data-l="zh">一切都是 slash 命令或模型可调用工具——无需先学习任何配置文件。</span>
+
+```
+/swarm on                                # parallel sub-agents
+/goal Refactor the auth module           # budget-tracked goal
+/todo init "Phase 1: scanner"            # phased task plan
+/plan                                    # read-only plan mode
+/tui style plain|boxed|compact           # switch editor chrome
+```
+</div>
+<div class="card reveal" markdown="1">
+### <span data-l="en">Docs</span><span data-l="zh">文档</span>
+<span data-l="en">Full feature walkthroughs, command/tool references, architecture, and tests live in the README (EN / 中).</span><span data-l="zh">完整功能说明、命令/工具参考、架构与测试详见 README（EN / 中）。</span>
+
+- [README (EN)](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/README.md)
+- [README (中文)](https://github.com/MuseLinn/pi-muselinn-harness/blob/main/README.zh-CN.md)
+- [Changelog](changelog.html) · [Self-hosting](self-hosting.html)
+</div>
+</div>
+
 <h2><span data-l="en">New in 0.9.13</span><span data-l="zh">0.9.13 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
@@ -69,154 +103,9 @@ title: pi-muselinn-harness
 <span data-l="en">Trimmed Markdown trailing whitespace so box borders fit terminal. Accounted for Text paddingX in stacked layout. Replaced non-existent theme color "info" with "accent". "n note" hint only shows when an option has a preview.</span><span data-l="zh">去除 Markdown 尾部空格，盒边框适配终端宽度。堆叠布局计入 Text paddingX。替换不存在的 theme 色 "info" 为 "accent"。"n note" 提示仅在有预览时显示。</span>
 </div>
 </div>
+<h2><span data-l="en">Previously</span><span data-l="zh">历史版本</span></h2>
 
-<h2><span data-l="en">New in 0.9.11</span><span data-l="zh">0.9.11 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Tool policy gate + Kimi Code alignment</span><span data-l="zh">工具门控 + Kimi Code 对齐</span>
-<span data-l="en">New <code>tool-policy/</code> module gates tool activation before the permission chain runs. Plan mode rewritten: bash is no longer blocked (follows normal permission mode), only Write/Edit outside plan file, TaskStop, and Cron mutations are blocked. Permission read-only set expanded with glob, read_media, task_list, cron_list, agent_file_list, and plan tools.</span><span data-l="zh">新增 <code>tool-policy/</code> 模块在权限链前检查工具激活状态。Plan 模式重写：bash 不再被拦截（走正常权限模式），仅拦截 Write/Edit 出 plan 文件、TaskStop 和 Cron 变更。权限只读集扩展了 glob、read_media、task_list、cron_list、agent_file_list 和 plan 工具。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Swarm report includes subagent output</span><span data-l="zh">Swarm 报告包含子代理输出</span>
-<span data-l="en"><code>formatReport()</code> now attaches each subagent's full <code>outputLines</code> to the report. The model sees what subagents actually produced — Kimi Code parity.</span><span data-l="zh"><code>formatReport()</code> 现在将每个子代理的完整 <code>outputLines</code> 附加到报告中。模型可以看到子代理实际产出的内容——与 Kimi Code 对齐。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.9.10</span><span data-l="zh">0.9.10 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">n note always visible</span><span data-l="zh">n 笔记常显</span>
-<span data-l="en">Ask dialog footer shows <code>· n note</code> unconditionally. Any option can carry a note.</span><span data-l="zh">Ask 对话框底栏无条件显示 <code>· n note</code>。任意选项都可写笔记。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.9.9</span><span data-l="zh">0.9.9 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Keyboard shortcut removed</span><span data-l="zh">快捷键移除</span>
-<span data-l="en"><code>alt+t</code>/<code>opt+t</code> removed — Windows SSH misinterprets bare <code>t</code> as <code>alt+t</code>. Use <code>/todo toggle</code> instead.</span><span data-l="zh"><code>alt+t</code>/<code>opt+t</code> 已移除——Windows SSH 会误把打字时的 <code>t</code> 识别为 <code>alt+t</code>。改用 <code>/todo toggle</code>。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Collapsed widget phase tree</span><span data-l="zh">折叠 widget 阶段树</span>
-<span data-l="en">Default collapsed view now shows roman-numeral phase headers with active tasks only — no longer a flat list.</span><span data-l="zh">默认折叠视图现在显示罗马数字阶段标头+仅进行中任务——不再是无结构的平铺列表。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Schema & build fixes</span><span data-l="zh">Schema 与构建修复</span>
-<span data-l="en"><code>notes</code> field properly nested under <code>parameters.properties</code> (was inside <code>items</code> — <code>add_notes</code> now works). Stray <code>}</code> at line 335 removed — extension loads without ParseError.</span><span data-l="zh"><code>notes</code> 字段正确放在 <code>parameters.properties</code> 级（之前嵌套在 <code>items</code> 内部——现在 <code>add_notes</code> 能用了）。335 行多余 <code>}</code> 已删除——扩展不再 ParseError。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.9.3–0.9.8</span><span data-l="zh">0.9.3–0.9.8 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Integration & consistency</span><span data-l="zh">集成与一致性</span>
-<span data-l="en">Widget API fixed: <code>ctx.widget()</code> → <code>ctx.ui.setWidget</code>, empty list hides widget. <code>/todo</code> subcommands aligned with oh-my-pi: <code>view</code> → <code>export</code>, added <code>copy</code>/<code>edit</code>, bare <code>/todo</code> prints Markdown. Every subcommand has status feedback. <code>clearTodoSession</code> now wired to <code>session_end</code>. <code>require()</code> → ES <code>import</code> for <code>swarmState</code> — subagent matching finally works.</span><span data-l="zh">Widget API 修复：<code>ctx.widget()</code> → <code>ctx.ui.setWidget</code>，空列表隐藏 widget。<code>/todo</code> 子命令对齐 oh-my-pi：<code>view</code> → <code>export</code>，添加 <code>copy</code>/<code>edit</code>，裸 <code>/todo</code> 打印 Markdown。每个子命令都有状态反馈。<code>clearTodoSession</code> 接入 <code>session_end</code>。<code>require()</code> → ES <code>import</code> 导入 <code>swarmState</code>——子 agent 匹配终于可用了。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.9.1</span><span data-l="zh">0.9.1 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Bug fixes</span><span data-l="zh">Bug 修复</span>
-<span data-l="en">Fixed <code>add_notes</code> fallthrough, stray <code>completed: number</code> line, and substring matching. 94/94 TODO tests green.</span><span data-l="zh">修复 <code>add_notes</code> fallthrough、残留 <code>completed: number</code> 行、子串匹配逻辑。94/94 TODO 测试通过。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.9.0</span><span data-l="zh">0.9.0 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">TODO Phase Model</span><span data-l="zh">TODO Phase Model — 分阶段管理</span>
-<span data-l="en">The todo system is rewritten with oh-my-pi-style phases: <code>TodoPhase</code> with per-task status (<code>pending</code>/<code>in_progress</code>/<code>completed</code>/<code>abandoned</code>), 7 ops, auto-promote, roman-numeral phase tree (<code>Ⅰ. Scanner · 2/4</code>) with collapse/expand, a reminder system that injects pending todos when the agent stops, and Markdown round-trip for <code>/todo export/import</code>.</span><span data-l="zh">Todo 系统全面重写为 oh-my-pi 风格阶段模型：<code>TodoPhase</code> 管理任务状态（<code>pending</code>/<code>in_progress</code>/<code>completed</code>/<code>abandoned</code>），7 种操作，自动 promote，罗马数字阶段树（<code>Ⅰ. Scanner · 2/4</code>）支持折叠展开，agent 停下时未完成 todo 自动注入提醒，支持 <code>/todo export/import</code> Markdown 双向导出。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Plan Mode — Kimi Code Permission Model</span><span data-l="zh">Plan Mode — 对齐 Kimi Code 权限模型</span>
-<span data-l="en">Plan mode no longer maintains its own bash command whitelist. Bash follows the normal permission mode (auto/yolo/manual) — the same design as Kimi Code. Only Write/Edit (outside plan file), TaskStop, and CronCreate/CronDelete are blocked. The plan file path is matched by exact path, <code>local://</code> basename, and resolved absolute path under <code>sessionDir/plans/</code>.</span><span data-l="zh">Plan mode 不再维护自己的 bash 命令白名单。bash 遵循正常的 permission mode（auto/yolo/manual）——与 Kimi Code 设计一致。只拦截 Write/Edit（非 plan 文件）、TaskStop 和 CronCreate/CronDelete。Plan 文件路径支持精确路径、<code>local://</code> 文件名匹配和 <code>sessionDir/plans/</code> 下的解析绝对路径三种方式。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">No more "stuck in plan mode"</span><span data-l="zh">不再「卡在 plan mode」</span>
-<span data-l="en"><code>cd</code> and other common commands were blocked by the bash whitelist. <code>local://</code> plan writes were rejected by the path guard. Both are fixed: bash passes through to the permission chain, and plan writes accept <code>local://</code> via basename matching.</span><span data-l="zh">以前 <code>cd</code> 等常见命令被 bash 白名单拦截，<code>local://</code> 写 plan 被路径守卫拒绝。现在两者都已修复：bash 放行到 permission chain，plan 写支持 <code>local://</code> 文件名匹配。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.8.2</span><span data-l="zh">0.8.2 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Custom Agent Files</span><span data-l="zh">自定义 Agent 文件</span>
-<span data-l="en">Define agent profiles as Markdown files with YAML frontmatter — <code>name</code>, <code>description</code>, <code>tools</code>/<code>disallowedTools</code>, <code>subagents</code>, and a system prompt template with <code>${base_prompt}</code> support. Discovered from <code>.pi/agents/</code>, <code>.kimi-code/agents/</code>, and <code>.agents/agents/</code>. Use <code>agent_file_list</code> to browse, and pass <code>agent_file</code> to <code>agent</code> or <code>agent_swarm</code>.</span><span data-l="zh">用 Markdown 文件 + YAML frontmatter 定义 agent 配置文件——<code>name</code>、<code>description</code>、<code>tools</code>/<code>disallowedTools</code>、<code>subagents</code>，支持 <code>${base_prompt}</code> 占位符。自动从 <code>.pi/agents/</code>、<code>.kimi-code/agents/</code>、<code>.agents/agents/</code> 发现。<code>agent_file_list</code> 浏览，<code>agent</code>/<code>agent_swarm</code> 传 <code>agent_file</code> 即可加载。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Tool Gating</span><span data-l="zh">工具门控</span>
-<span data-l="en">Three-layer tool policy (Profile → Session runtime) integrated into the 18-level permission chain. Agent file profiles can restrict which tools a subagent may use. The gate is checked before any policy rule runs.</span><span data-l="zh">三层工具策略（Profile → Session 运行时）集成到 18 级权限链。Agent 文件可以限制子代理能用的工具。门控在权限规则之前执行。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Agent Lifecycle</span><span data-l="zh">Agent 生命周期</span>
-<span data-l="en"><code>agent.created</code> / <code>agent.disposed</code> events emitted by every subagent run. Active agent count shown in the status bar — just like Kimi Code's <code>[3 agents running]</code>.</span><span data-l="zh">子代理运行时会触发 <code>agent.created</code> / <code>agent.disposed</code> 事件。状态栏实时显示活动 agent 数量——和 Kimi Code 的 <code>[3 agents running]</code> 一样的体验。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Permission &amp; Plan Mode Alignment</span><span data-l="zh">权限与 Plan 模式对齐</span>
-<span data-l="en">Policy chain reordered: Auto mode is truly automatic (no dialogs), YOLO still guards destructive/sensitive ops. Plan mode blocks <code>task_stop</code>/<code>cron_create</code>/<code>cron_delete</code>. Sparse/full injection variants reduce prompt bloat. Auto ExitPlanMode warns <em>"user has NOT explicitly approved"</em>.</span><span data-l="zh">策略链重排：Auto 模式真正全自动（无对话框），YOLO 仍保护破坏性/敏感操作。Plan 模式阻断 <code>task_stop</code>/<code>cron_create</code>/<code>cron_delete</code>。Full/Sparse 注入变体减少 prompt 膨胀。Auto 模式 ExitPlanMode 输出 <em>"user has NOT explicitly approved"</em> 警告。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.7.9</span><span data-l="zh">0.7.9 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Revise feedback input</span><span data-l="zh">Revise 反馈输入</span>
-<span data-l="en">Plan approval's <strong>Revise</strong> now opens a text input dialog before returning to plan mode. Your revision feedback is persisted into <code>PlanData.revisionFeedback</code> and injected into the plan-mode system prompt — the model sees exactly what you want changed, every time.</span><span data-l="zh">Plan 审批的 <strong>Revise</strong> 现在先弹文本输入框，再回到 plan mode。你的修改意见持久化到 <code>PlanData.revisionFeedback</code> 并注入 plan mode system prompt——模型每次都清楚地知道你要改什么。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Same plan, now with direction</span><span data-l="zh">同一计划，有方向地改</span>
-<span data-l="en"><code>reenterForRevision(feedback)</code> keeps the same plan id/path/content while injecting user feedback. Three files changed: <code>types.ts</code>, <code>index.ts</code>, <code>tools.ts</code>. All 19 suites, 580+ assertions — green.</span><span data-l="zh"><code>reenterForRevision(feedback)</code> 保留同一 plan id/path/content，同时注入用户反馈。改了三个文件：<code>types.ts</code>、<code>index.ts</code>、<code>tools.ts</code>。全部 19 套件、580+ 断言——全绿。</span>
-</div>
-</div>
-
-<h2><span data-l="en">New in 0.7.8</span><span data-l="zh">0.7.8 新功能</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Background tasks, fixed at the root</span><span data-l="zh">后台任务，从根上修好</span>
-<span data-l="en">Two root causes behind broken tasks on pi ≥ 0.81: <code>run_background</code> died at spawn because the subagent loader omitted <code>LoadExtensionsResult.runtime</code> (<code>createAgentSession</code> threw — empty <code>task_output</code>, <code>block:true</code> returning instantly); and <code>task_list</code> crashed on restored entries whose text lived in <code>description</code>, not <code>prompt</code>. Both fixed — runtime included (0.80-compatible), <code>description → prompt</code> mapped, and failed tasks now surface <code>[task failed: …]</code>.</span><span data-l="zh">pi ≥ 0.81 上任务失效的两个根因：<code>run_background</code> 因子代理 loader 缺少 <code>LoadExtensionsResult.runtime</code> 在 spawn 即抛错（<code>task_output</code> 为空、<code>block:true</code> 立即返回）；<code>task_list</code> 对文本存在 <code>description</code> 而非 <code>prompt</code> 的恢复 entry 直接崩溃。现已双修复——loader 携带 runtime（兼容 0.80）、<code>description → prompt</code> 映射，失败任务显示 <code>[task failed: …]</code>。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Plan persistence dedup</span><span data-l="zh">Plan 持久化去重</span>
-<span data-l="en"><code>PlanManager.persist()</code> no longer appends duplicate entries (observed: 5 identical <code>muselinn_plan</code> entries within 25 s) — a serialized state identical to the last persisted one is skipped, and restore seeds the dedup baseline.</span><span data-l="zh"><code>PlanManager.persist()</code> 不再追加重复 entry（实测 25 秒内 5 条相同 <code>muselinn_plan</code>）——与上次持久化内容相同的序列化状态直接跳过，restore 时播种去重基线。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Regression-locked</span><span data-l="zh">回归锁定</span>
-<span data-l="en">New <code>task.test.mjs</code> suite (16 checks): restore prompt defaulting, prompt-less list rendering, <code>block:true</code> waiting, failed-task surfacing, loader runtime shape. 19 suites, 580 assertions — all green in CI.</span><span data-l="zh">新增 <code>task.test.mjs</code> 套件（16 项）：恢复 prompt 兜底、无 prompt 列表渲染、<code>block:true</code> 等待、失败任务报错、loader runtime 结构。共 19 个套件、580 项断言，CI 全绿。</span>
-</div>
-</div>
-
-<h2><span data-l="en">Previously — 0.7.7</span><span data-l="zh">此前 — 0.7.7</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Plan &amp; Goal, de-glitch’d</span><span data-l="zh">Plan 与 Goal 除颤</span>
-<span data-l="en">Plan mode: the bash gate vets <code>rtk</code>-wrapped commands, Revise keeps the same plan object, and stale restored plans deactivate instead of trapping the session. Goal: badge counters restore monotonically (no more flicker), completed goals stay completed, and the <code>verified=true</code> completion rule is documented in the tool itself.</span><span data-l="zh">Plan 模式：bash 门禁识别 <code>rtk</code> 包装命令，Revise 保留同一 plan 对象，过期恢复的 plan 自动停用而不是困住会话。Goal：徽标计数单调恢复（不再闪烁），完成的目标不会复活，<code>verified=true</code> 完成规则写进了工具描述。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Ask dialog robustness</span><span data-l="zh">Ask 对话框健壮性</span>
-<span data-l="en">The tabbed multi-question dialog (multi-select + free-text Other) grows up: long option lists scroll in a bounded window, duplicate answers are deduplicated, and background tasks can ask questions without wedging the UI.</span><span data-l="zh">标签页多题对话框（多选 + Other 自由文本）走向成熟：超长选项列表在有界窗口内滚动，重复答案自动去重，后台任务也能发起提问而不卡死 UI。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">CI/CD on GitHub Actions</span><span data-l="zh">GitHub Actions CI/CD</span>
-<span data-l="en">Every push and PR runs the full test matrix (ubuntu + windows × node 22/24, 19 suites, 580 assertions).</span><span data-l="zh">每次 push 与 PR 运行完整测试矩阵（ubuntu + windows × node 22/24，19 个套件，580 项断言）。</span>
-</div>
-</div>
-
-<h2><span data-l="en">Earlier — 0.7.4 / 0.7.5</span><span data-l="zh">更早 — 0.7.4 / 0.7.5</span></h2>
-<div class="roadmap-grid">
-<div class="card reveal" markdown="1">
-### <span data-l="en">Native companion tools</span><span data-l="zh">原生伴随工具</span>
-<span data-l="en"><code>ask_user_question</code> dialog and <code>todo_list</code> + inline panel (<code>alt+t</code>) are now built in — no external rpiv packages needed. Approval panel with per-tool titles and reject-with-reason for the manual tier.</span><span data-l="zh"><code>ask_user_question</code> 问卷对话框与 <code>todo_list</code> + 内联面板（<code>alt+t</code>）已原生内置——不再需要外部 rpiv 包。manual 档审批面板：分工具标题、拒绝可填理由。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Safer by default</span><span data-l="zh">默认更安全</span>
-<span data-l="en">Swarm permission gating with <code>/mode</code> broadcast, subagent resume guard, oversized tool results truncated to disk with <code>output_path</code>, and no-UI permission blocks that state NOT-executed explicitly.</span><span data-l="zh">swarm 权限门控（<code>/mode</code> 广播）、子代理 resume 守卫、超大工具结果落盘留 <code>output_path</code>，无 UI 时权限阻断明确告知"未执行"。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">pi 0.81 ready</span><span data-l="zh">已兼容 pi 0.81</span>
-<span data-l="en">Verified against pi 0.81.x. Upgrading? Remove the old companion extensions (<code>rpiv-ask-user-question</code>, <code>rpiv-todo</code>) — the built-in tools replace them.</span><span data-l="zh">已验证兼容 pi 0.81.x。升级注意：请移除旧的伴随扩展（<code>rpiv-ask-user-question</code>、<code>rpiv-todo</code>）——内置工具已替代它们。</span>
-</div>
-</div>
+<p><span data-l="en">All earlier release notes moved to the</span><span data-l="zh">更早的版本记录已移至</span> <a href="changelog.html"><span data-l="en">changelog page</span><span data-l="zh">更新日志页</span></a> <span data-l="en">— 0.9.11, 0.9.10, 0.9.9, 0.9.3–0.9.8, 0.9.1, 0.9.0, 0.8.2, 0.7.9, 0.7.8, 0.7.7, 0.7.4/0.7.5.</span><span data-l="zh">— 0.9.11、0.9.10、0.9.9、0.9.3–0.9.8、0.9.1、0.9.0、0.8.2、0.7.9、0.7.8、0.7.7、0.7.4/0.7.5。</span></p>
 
 <h2><span data-l="en">Commands</span><span data-l="zh">命令</span></h2>
 

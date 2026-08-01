@@ -2,202 +2,57 @@
 
 [![test](https://github.com/MuseLinn/pi-muselinn-harness/actions/workflows/test.yml/badge.svg)](https://github.com/MuseLinn/pi-muselinn-harness/actions/workflows/test.yml)
 
-**Kimi Code-style agent orchestration harness for the [Pi coding agent](https://pi.dev)** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI, an eleven-module architecture that builds the features Pi deliberately skips (sub-agents, plan mode, todo, …) and aligns them with Kimi Code's subsystem behavior.
+**Kimi Code-style agent orchestration for the [Pi coding agent](https://pi.dev)** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI, one package that builds the features Pi deliberately skips (sub-agents, plan mode, todo, …) and aligns them with Kimi Code's subsystem behavior.
 
-Compatible with pi 0.81.x–0.83.x on macOS, ubuntu, and windows; Node 22/24, CI-tested on ubuntu + windows.
-
-### What's new in 0.9.13
-
-**Plan mode Kimi Code full alignment:**
-- Plan injection rewritten to match Kimi Code's `plan-mode.ts` wording (full + sparse variants).
-- `enter_plan_mode`, `exit_plan_mode`, and plan-file writes auto-approved (skip permission chain).
-- Per-tool deny messages: TaskStop, CronCreate, CronDelete get specific reasons in plan mode.
-- `isPlanFilePath()` shared helper for consistent plan-file path matching.
-- Plan approval panel shows full file content (removed 500-char truncation).
-
-**Permission dialog UX:**
-- "Deny with reason" input: Esc now returns to the 4 options instead of ending the flow.
-- Looped dialog matches the plan approval panel's Revise pattern.
-
-**Subagent profile system:**
-- New `packages/core/profile/` with CODER / EXPLORE / PLAN profiles.
-- Tool permissions aligned with Kimi Code YAML definitions (bash in explore, no write in plan).
-- Profiles injected via `buildProfileTools()` + `createSubagentResourceLoader()`.
-
-**Preview box fix:**
-- Trimmed Markdown trailing whitespace so box borders don't exceed terminal width.
-- Accounted for pi-tui `Text` component's `paddingX=1` in stacked layout.
-
-**Misc:**
-- Replaced `theme.fg("info", ...)` with `theme.fg("accent", ...)` ("info" color didn't exist).
-- `hasAnyPreviewOption()`: "n note" hint only shows when an option has a preview.
-- Questionnaire arrow-key tab switching uses `matchesKey()` (Kitty protocol compatible).
-- All 19 test suites green.
-
-### What's new in 0.9.12
-
-- Made `resources_discover` handler async and added timing.
-- Wrapped `restoreTodos`, `bindTodoSession`, `refreshWidget`, and `loadPlugins` in try/catch.
-- Removed unused `VisibleTodos` / `selectVisibleTodos` dead code (78 lines).
-- Cleaned up MusePi fork references from README and docs.
-
-### What's new in 0.9.11
-
-- **Swarm report includes subagent output** — model sees what each subagent
-  produced (Kimi Code parity).
-- **Tool policy gate** — disabled tools blocked before permission chain.
-- **Plan mode Kimi Code alignment** — bash no longer blocked in plan mode;
-  only Write/Edit (outside plan file), TaskStop, Cron mutations blocked.
-- All 12 test suites green
-
-### What's new in 0.9.10
-
-- **Ask dialog `n` note always visible** — Footer shows `· n note` unconditionally; any option can carry a note (OMP parity).
-- All 12 test suites green
-### What's new in 0.9.3–0.9.8
-
-**Integration & consistency fixes:**
-- Widget API fixed: `ctx.widget()` → `ctx.ui.setWidget("todo", content)`, empty list clears widget instead of showing "(empty)" clutter
-- `/todo` subcommands aligned with oh-my-pi: `view` → `export`, added `copy`, `edit`, bare `/todo` prints Markdown
-- Every `/todo` subcommand produces status feedback via `ctx.showStatus`
-- Removed redundant `/todo help` / `?` (command registry provides discoverability)
-- `clearTodoSession` now wired to `session_end` event (was imported but never called)
-- `require()` → ES `import` for `swarmState` (require silently failed in bundled ESM runtime — subagent matching finally works)
-- All 12 test suites green at every commit
-
-### What's new in 0.9.1
-
-**Bug fixes:**
-- Fixed `add_notes` case in `applyEntry` — no longer falls through into `update_details` (all add_notes calls rejected with "Missing details value")
-- Fixed stray `completed: number` in function body that blocked module parsing
-- `todoMatchesAnyDescription` now correctly checks shorter string against longer one for substring matching
-- All 94 TODO tests green, full suite 12/12
-
-### What's new in 0.9.0
-
-**TODO Phase Model — phased task planning with reminders built in.**
-
-The todo system is rewritten with an oh-my-pi-style phase model (`TodoPhase`):
-per-task status (`pending`/`in_progress`/`completed`/`abandoned`), 7 ops
-(`init`/`start`/`done`/`drop`/`rm`/`append`/`view`), and auto-promote of the
-first task on phase init. The widget renders a roman-numeral phase tree
-(`Ⅰ. Scanner · 2/4`) with collapse/expand.
-
-**Reminder system:** When the agent stops with incomplete todos, a
-`<system-reminder>` injects the task list into the next turn (max 3
-reminders, debounced).
-
-**Markdown round-trip:** `/todo export/import` serializes and restores phases
-as Markdown for sharing and persistence between sessions.
-
-**Plan Mode — Kimi Code permission model alignment.**
-
-Plan mode no longer maintains its own bash command whitelist. Instead, bash
-follows the normal permission mode (auto/yolo/manual) — the same design as
-Kimi Code. Only the following are blocked during planning:
-- **Write/Edit** to files outside the active plan file
-- **TaskStop** (would abort background work during planning)
-- **CronCreate / CronDelete** (would mutate scheduled work)
-
-The plan file path is matched by exact path, `local://` scheme basename, and
-resolved absolute path under the session's `plans/` directory — all three paths
-accepted.
-
-This eliminates the root cause of "stuck in plan mode" where common commands
-like `cd` were blocked by the bash whitelist, and plan file writes using the
-`local://` scheme were rejected.
-
-**Plan mode bash permission model:**
-
-| Before (0.8.2) | After (0.9.0) |
-|---|---|
-| Static regex whitelist (~35 commands) | No bash restriction — follows permission mode |
-| `cd` not in whitelist → blocked | `cd`, `git push`, `npm install` all allowed (permission mode decides) |
-| `local://` plan writes rejected (path mismatch) | `local://` basename matched against active plan file |
-| Deny-by-default for unmatched commands | Allow-by-default, permission chain controls |
-
-### What's new in 0.8.2
-
-**Custom Agent Files** — Define agent profiles as Markdown files with YAML frontmatter:
-```markdown
----
-name: my-coder
-description: Custom coding agent with restricted tools
-tools:
-  - Read
-  - Grep
-  - Edit
-  - Bash
-disallowedTools:
-  - Bash
----
-You are a specialized coding agent.
-${base_prompt}
-```
-Place them in `.pi/agents/`, `.kimi-code/agents/`, or `.agents/agents/` (project or user scope).
-Use `agent_file_list` to browse, and pass `agent_file="my-coder"` to `agent` or `agent_swarm`.
-
-**Tool Gating** — Three-layer tool policy integrated into the permission chain.
-Agent profiles can restrict which tools a subagent may use; the policy is enforced
-at the `tool_call` event level, before the 18-level permission chain.
-
-**Agent Lifecycle Events** — `agent.created` / `agent.disposed` events tracked
-per subagent. Active agent count shown in the status bar (`[3 agents running]`).
-
-**Permission Mode Rework (kimi-code aligned):**
-- **Auto** — truly automatic: no dialogs for any tool (including destructive/sensitive).
-  `AskUserQuestion` is disabled. `ExitPlanMode` auto-approves with a warning.
-- **YOLO** — fast but still safe: destructive commands, `.env` access, `.git` paths
-  still require approval. `AskUserQuestion` is allowed. `ExitPlanMode` shows review.
-- **Manual** — full 18-level policy chain with fallback-ask.
-
-**Plan Mode improvements:**
-- `task_stop` / `cron_create` / `cron_delete` blocked during planning
-- Sparse/full injection reminders (less prompt bloat on long planning sessions)
-- Auto-mode ExitPlanMode warns "user has NOT explicitly approved"
-
-### What's new in 0.7.8
-
-- **Task module reliability fixes** — the two root causes behind broken background tasks on pi ≥ 0.81:
-  - `run_background` died at spawn (`task_output` empty, `block:true` returned instantly): the subagent resource loader omitted `LoadExtensionsResult.runtime`, which pi 0.81's `ExtensionRunner.bindCore` requires — `createAgentSession` threw and every background task failed immediately. The loader now includes the runtime when the SDK provides it (still 0.80-compatible)
-  - `task_list` crashed with no arguments while `active_only:true` worked: restored persisted entries carry the task text as `description` (or not at all), and the list formatter called `prompt.slice()` on `undefined`. Restore now maps `description` → `prompt` and defaults missing prompts; `task_output` also surfaces `[task failed: <error>]` for tasks that died before producing output
-- **Plan persistence dedup** — `PlanManager.persist()` skips appends identical to the last persisted state (observed: 5 identical `muselinn_plan` entries within 25 s), and restore seeds the dedup baseline so a no-change persist doesn't re-append
-- **Tests** — new `task.test.mjs` suite (16 checks) + plan dedup regression cases; 19 suites / 580 assertions, all green
-
-### What's new in 0.7.7
-
-- **Plan mode fixes** — the bash read-only gate now understands `rtk`-wrapped commands (pi-rtk-optimizer rewrites commands in place) and Windows `dir`; **Revise** keeps the same plan object instead of trapping you or losing work; review timeout raised 60 s → 600 s; a stale persisted plan with no file on disk deactivates cleanly instead of trapping the session; the `plan` badge now also follows tool-driven plan mode
-- **Goal fixes** — footer badge counters (`turns` / tokens / wall-clock) restore monotonically, so they never flicker backwards; completed goals leave a tombstone entry and can't be resurrected with stale counters; `update_goal` docs now state the `verified=true` rule explicitly (required to complete a goal with a declared criterion)
-- **Ask dialog robustness** — scrolling window for long option lists, answer deduplication, and background-question support, on top of the tabbed multi-question dialog (multi-select + free-text Other)
-- **CI/CD** — GitHub Actions test matrix (ubuntu + windows × node 22/24) on every push/PR
-
-### What's new in 0.7.4
-
-- **`ask_user_question` tool** — native interactive question dialog with numbered options, shared with the approval flow
-- **`todo_list` tool + inline panel** — session-shared todo with collapse policy (replaces external rpiv-todo)
-- **Approval panel** — per-tool titles, number-key selection, reject-with-reason (manual permission tier)
-- **Swarm permission gating** — shared permission manager; `/mode` broadcasts to all subagents
-- **Editor anchoring** — input anchored after slash-menu closes (render-edge detection)
-- **`toolResultTruncation`** — oversized tool results persisted to disk with preview + `output_path`
-- **Subagent resume guard** — ownership/idle validation before resuming
-- **`fetch_url` tool** — no-auth URL fetching (replaces external dependency)
-- **Plugin manifest** — six-piece package metadata set
-
-[中文文档](README.zh-CN.md) · [Project page](https://muselinn.github.io/pi-muselinn-harness/) · [pi.dev catalog](https://pi.dev/packages/pi-muselinn-harness)
+Compatible with pi 0.81.x–0.83.x on macOS, Ubuntu, and Windows · Node 22/24 · CI-tested on Ubuntu + Windows.
 
 ![Closed-box editor with streaming state in the top border](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
-## Install
-Already installed? Re-run the same command to upgrade to the latest release (0.9.9).
+
+## What is this?
+
+Pi is a focused coding agent: no sub-agents, no plan mode, no todo. This
+harness adds them — in the same style as [Kimi Code](https://www.kimi.com/code) —
+as a single install:
+
+| You want | You get |
+|---|---|
+| Parallel sub-agents | `agent_swarm` / `agent` — real `max_concurrency`, live braille-grid TUI, `run_in_background`, `/resume` |
+| Plan before execution | `enter_plan_mode` — read-only exploration, approval gate, Kimi Code permission model |
+| Stay on task | `/goal` — lifecycle, budgets, queue, completion-criterion gate |
+| Safety rails | 18-level permission chain (`auto` / `yolo` / `manual`), destructive-command + `.env` guards |
+| Work that outlives the turn | `run_background` + `cron_create` — persistent tasks and scheduled prompts |
+| The agent asks properly | `ask_user_question` — tabbed multi-question dialog with previews |
+| Task tracking | `/todo` + `todo_list` — phased plan with inline panel and reminders |
+| A nicer editor | `╭─╮ │ ╰─╯` closed-box TUI with spinner + model in the border |
+| Lifecycle automation | `[[hooks]]` engine — 16 events, blockable PreToolUse/Stop/UserPromptSubmit |
+
+## Quick start
+
 ```bash
-pi install npm:pi-muselinn-harness
+pi install npm:pi-muselinn-harness     # or: pi install git:github.com/MuseLinn/pi-muselinn-harness
+pi                                      # restart, then:
 ```
 
-Or from git / local source:
+Try it out:
 
-```bash
-pi install git:github.com/MuseLinn/pi-muselinn-harness
-pi install local:~/.pi/agent/extensions/pi-muselinn-harness
 ```
+/swarm on                                # enable swarm mode
+/goal Refactor the auth module           # set a goal with budget tracking
+/todo init "Phase 1: scanner"            # start a phased task plan
+/plan                                    # enter plan mode (read-only exploration)
+/tui style plain|boxed|compact           # switch editor chrome anytime
+```
+
+Everything works out of the box — **no companion extensions required**. All
+tools are model-callable, all commands are slash commands with Tab completion.
+
+> **Upgrading from ≤ 0.7.4?** Remove the old companion extensions — they
+> conflict with the built-in tools (pi refuses to start on duplicate tool
+> names):
+> ```bash
+> pi remove npm:@juicesharp/rpiv-ask-user-question
+> pi remove npm:rpiv-todo
+> ```
 
 ## Features
 
@@ -280,6 +135,7 @@ pi install local:~/.pi/agent/extensions/pi-muselinn-harness
 - **Answer reporting** — per-question answers (multi-select as an array); skipped questions and Esc-cancelled dialogs are reported distinctly
 - **Auto-mode safe** — auto mode denies `ask_user_question` by policy (no unattended hangs)
 
+### Todo
 - **Inline panel** — above-editor widget with roman-numeral phase tree (`Ⅰ. Scanner · 2/4`), `/todo toggle` expand/collapse, empty list hides widget entirely
 - **`/todo` command** — full oh-my-pi phase model: `init`, `start`, `done`, `drop`, `rm`, `append`, `export`, `import`, `copy`, `edit`, `add_notes`, `update_details`, bare `/todo` prints Markdown
 - **`todo_list` tool** — model-driven task management with same ops
@@ -299,25 +155,6 @@ pi install local:~/.pi/agent/extensions/pi-muselinn-harness
 
 ### Output truncation
 - **Oversized tool results spill to disk** — results over 40k chars are written to `<sessionDir>/tool-results/` and replaced in context with a sanitized head+tail preview carrying the `output_path` and read-paging instructions (Kimi `toolResultTruncation` pattern)
-
-## Kimi Code alignment
-
-Against the [Kimi Code CLI docs — Agents & Subagents](https://www.kimi.com/code/docs/kimi-code-cli/customization/agents.html):
-
-| Capability | Status | Notes |
-|------------|--------|-------|
-| Three built-in subagent types (coder/explore/plan) | ✅ | coder=read/write+bash; explore=read-only; plan=read-only, no shell |
-| Context isolation | ✅ | Independent sessions; only final results flow back |
-| Parallel dispatch + max_concurrency | ✅ | Real worker-pool cap + progressive launch |
-| 30-minute timeout | ✅ | Per-subagent AbortSignal.timeout |
-| Background execution (run_in_background) | ✅ | Early task-ID return, blockable task_output, report to output_path |
-| Resume an existing subagent | ⚠️ | Conservative semantics: same-id re-run; resume validated (saved state + nothing in flight + remaining items); true session resume pending pi-coding-agent API |
-| Nested subagents (coder spawning more) | ❌ | Deliberately closed — no recursive dispatch; subagent toolset excludes agent/agent_swarm |
-| Permission inheritance | ✅ | Worker tool calls pass through the shared policy chain; /mode propagates by construction; asks degrade to blocks |
-| Instruction-file hierarchy | ✅ | Project `AGENTS.md` / `.kimi-code/AGENTS.md` → `$KIMI_CODE_HOME/AGENTS.md` → `~/.agents/AGENTS.md` |
-| wire.jsonl session persistence | ❌ | Subagents use SessionManager.inMemory() (in-process lifecycle) |
-| Hooks (`[[hooks]]` lifecycle) | ✅ | All 16 events, exit-code/stdout-JSON block semantics, fail-open |
-| Agent Skills (four scopes) | ✅+ | Kimi's four covered and extended to seven pi-native scopes; directory + flat forms; subagent + main-session channels |
 
 ## Commands
 
@@ -349,11 +186,29 @@ Against the [Kimi Code CLI docs — Agents & Subagents](https://www.kimi.com/cod
 | `run_background` / `task_list` / `task_output` / `task_stop` | Background tasks |
 | `cron_create` / `cron_list` / `cron_delete` | Cron jobs |
 
+## Kimi Code alignment
+
+Against the [Kimi Code CLI docs — Agents & Subagents](https://www.kimi.com/code/docs/kimi-code-cli/customization/agents.html):
+
+| Capability | Status | Notes |
+|------------|--------|-------|
+| Three built-in subagent types (coder/explore/plan) | ✅ | coder=read/write+bash; explore=read-only; plan=read-only, no shell |
+| Context isolation | ✅ | Independent sessions; only final results flow back |
+| Parallel dispatch + max_concurrency | ✅ | Real worker-pool cap + progressive launch |
+| 30-minute timeout | ✅ | Per-subagent AbortSignal.timeout |
+| Background execution (run_in_background) | ✅ | Early task-ID return, blockable task_output, report to output_path |
+| Resume an existing subagent | ⚠️ | Conservative semantics: same-id re-run; resume validated (saved state + nothing in flight + remaining items); true session resume pending pi-coding-agent API |
+| Nested subagents (coder spawning more) | ❌ | Deliberately closed — no recursive dispatch; subagent toolset excludes agent/agent_swarm |
+| Permission inheritance | ✅ | Worker tool calls pass through the shared policy chain; /mode propagates by construction; asks degrade to blocks |
+| Instruction-file hierarchy | ✅ | Project `AGENTS.md` / `.kimi-code/AGENTS.md` → `$KIMI_CODE_HOME/AGENTS.md` → `~/.agents/AGENTS.md` |
+| wire.jsonl session persistence | ❌ | Subagents use SessionManager.inMemory() (in-process lifecycle) |
+| Hooks (`[[hooks]]` lifecycle) | ✅ | All 16 events, exit-code/stdout-JSON block semantics, fail-open |
+| Agent Skills (four scopes) | ✅+ | Kimi's four covered and extended to seven pi-native scopes; directory + flat forms; subagent + main-session channels |
+
 ## Architecture
 
-Core/adapter split: `packages/core/` is pure logic with **zero pi imports**
-the repo
-root holds the pi adapter (entry, pi-tui components, tool registration).
+Core/adapter split: `packages/core/` is pure logic with **zero pi imports**;
+the repo root holds the pi adapter (entry, pi-tui components, tool registration).
 
 ```
 pi-muselinn-harness/
@@ -398,7 +253,7 @@ pi-muselinn-harness/
 
 ## Tests
 
-Pure node-level unit tests, no model quota needed (19 suites, 590+ assertions):
+Pure node-level unit tests, no model quota needed (22 suites, 650+ assertions):
 
 ```bash
 npm test                                        # all suites (node tests/run-all.mjs)
@@ -407,6 +262,7 @@ npm test                                        # all suites (node tests/run-all
 or individually:
 
 ```bash
+node tests/musepi-config.test.mjs                 # MusePi config compat — 9
 node tests/permission.test.mjs                    # Permission policy chain + subagent gate — 22
 node tests/goal.test.mjs                          # Goal state machine + monotonic restore — 32
 node tests/plan.test.mjs                          # Plan mode round-trip + restore validation — 42
@@ -416,7 +272,10 @@ node tests/hooks.test.mjs                         # Hooks engine — 43
 node tests/skills.test.mjs                        # Skills scan/parse/scopes/discover — 38
 node tests/tui.test.mjs                           # TUI collapse/keys/completions/spinner — 62
 node tests/tui-box.test.mjs                       # TUI box/config/probe/switch — 61
+node tests/agent-file.test.mjs                   # agent file discovery/parse — 11
+node tests/agent-lifecycle.test.mjs               # agent lifecycle events — 6
 node tests/ask.test.mjs                           # ask spec/dialog/answers/approval titles — 123
+node tests/tool-policy.test.mjs                  # tool policy gate — 13
 node tests/todo.test.mjs                          # todo model + folding strategy — 21
 node tests/shell-output.test.mjs                  # output sanitizer — 21
 node tests/truncation.test.mjs                    # tool-result spill — 13
@@ -425,24 +284,13 @@ node tests/webfetch.test.mjs                      # web extraction — 12
 node tests/plugin.test.mjs                        # plugin manifest/discovery — 17
 node tests/renderer.test.mjs                      # incremental renderer buffer/tree — 16
 node tests/stream-rules.test.mjs                  # stream entry rules — 14
-
 ```
 
 The suites run on Node 20/22/24 (20 via `tests/ts-esm-loader.mjs`, a
 TypeScript-transpile ESM loader; 22.6+ strips types natively). CI runs the
 full matrix — ubuntu + windows × node 20/22 — on every push and PR.
 
-## Releasing (maintainers)
-Tag to mark the release (CI publish removed — publish locally with OTP):
-
-```bash
-npm run version-patch && git tag v0.9.1 && git push origin v0.9.1
-```
-## Experimental branches
-- [`feature/math-renderer`](https://github.com/MuseLinn/pi-muselinn-harness/tree/feature/math-renderer) — renders `$$...$$` display math in assistant messages via [txm](https://github.com/thatmagicalcat/txm) (cell-based 2D typesetting, works in Windows Terminal; no image protocol). Context-safe: the original Markdown is restored before every LLM call. Enable with `/tui math on` after `cargo install txm`.
-
 ## Roadmap
-
 
 - **i18n** — bilingual harness UI text and notifications (docs are already split en/zh-CN; the project page has an EN/中 toggle)
 - **Math renderer graduation** — merge `feature/math-renderer` once compaction-path context safety is confirmed
@@ -455,13 +303,9 @@ npm run version-patch && git tag v0.9.1 && git push origin v0.9.1
 - `@earendil-works/pi-coding-agent`, `@earendil-works/pi-ai`, `@earendil-works/pi-tui` (peers)
 - `typebox`
 
-**No companion extensions required** — the harness is fully functional standalone. Since 0.7.4, `ask_user_question` and `todo_list` are built in natively:
+## Experimental branches
 
-> **Upgrading to 0.7.4?** Remove the old companion extensions — they conflict with the built-in tools (pi refuses to start on duplicate tool names):
-> ```bash
-> pi remove npm:@juicesharp/rpiv-ask-user-question
-> pi remove npm:rpiv-todo
-> ```
+- [`feature/math-renderer`](https://github.com/MuseLinn/pi-muselinn-harness/tree/feature/math-renderer) — renders `$$...$$` display math in assistant messages via [txm](https://github.com/thatmagicalcat/txm) (cell-based 2D typesetting, works in Windows Terminal; no image protocol). Context-safe: the original Markdown is restored before every LLM call. Enable with `/tui math on` after `cargo install txm`.
 
 ## Acknowledgments
 
@@ -496,6 +340,18 @@ Design and implementation inspired by these open-source projects:
 ---
 
 **Note**: this extension is mostly an independent implementation. Exception: `tui/box.ts`'s `wrapWithSideBorders` is ported from Kimi Code (MIT), with attribution kept in comments and used under the MIT license.
+
+## Releasing (maintainers)
+
+Tag to mark the release (CI publish removed — publish locally with OTP):
+
+```bash
+npm run version-patch && git tag v0.9.1 && git push origin v0.9.1
+```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full version history.
 
 ## License
 

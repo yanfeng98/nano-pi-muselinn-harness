@@ -265,8 +265,13 @@ export default function (pi: ExtensionAPI) {
     // Set plan session directory (for plan file storage)
     try { planManager.setSessionDir(ctx.sessionManager.getSessionDir()); } catch { /* ok */ }
 
-    // Refresh model catalog once at startup (Pi 0.80.8 async refresh)
-    try { await ctx.modelRegistry?.refresh?.(); } catch { /* non-critical */ }
+    // Refresh model catalog once at startup (Pi 0.80.8 async refresh).
+    // Fire-and-forget: this handler runs inside init()'s awaited session_start
+    // emit, so awaiting a network refresh here blocks the TUI input loop when
+    // the catalog fetch stalls (no signal/timeout). Pi's own run() already
+    // refreshes in the background after init(), so startup never needs to
+    // wait on the network.
+    void ctx.modelRegistry?.refresh?.().catch(() => {});
 
     // Restore goal + plan BEFORE the status-bar section so restored state is
     // reflected in the badges below.
