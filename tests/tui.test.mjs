@@ -333,12 +333,14 @@ check("keep-alive: not working -> no render",
   shouldKeepAliveRender(false, 0, 10000) === false);
 check("keep-alive: working + recent render (10ms ago) -> skip",
   shouldKeepAliveRender(true, 9990, 10000) === false);
-check("keep-alive: working + quiet >= threshold (60ms ago) -> render",
-  shouldKeepAliveRender(true, 9940, 10000) === true);
+check("keep-alive: working + quiet below threshold (150ms ago) -> skip",
+  shouldKeepAliveRender(true, 9850, 10000) === false);
+check("keep-alive: working + quiet >= threshold (250ms ago) -> render",
+  shouldKeepAliveRender(true, 9750, 10000) === true);
 check("keep-alive: never rendered (0) -> render",
   shouldKeepAliveRender(true, 0, 10000) === true);
-check("keep-alive: quiet threshold is 50ms",
-  KEEP_ALIVE_QUIET_MS === 50);
+check("keep-alive: quiet threshold is 200ms",
+  KEEP_ALIVE_QUIET_MS === 200);
 check("wall-clock frame: advances by time, wraps around",
   wallClockFrameIndex(8, 0, 250) === 0 && wallClockFrameIndex(8, 250, 250) === 1 &&
   wallClockFrameIndex(8, 2000, 250) === 0 && wallClockFrameIndex(8, 2250, 250) === 1);

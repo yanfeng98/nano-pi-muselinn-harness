@@ -82,7 +82,7 @@ describe("shimmer: classic mode", () => {
 
   test("band position advances with wall-clock (smoothness: not frame-counted)", () => {
     const text = "Working on a long task...";
-    // 30 cells/s → 300ms later the band moved ~9 cells.
+    // 20 cells/s → 300ms later the band moved ~6 cells.
     const a = shimmer.shimmerText(text, resolver, "classic", t0);
     const b = shimmer.shimmerText(text, resolver, "classic", t0 + 300);
     assert.notEqual(a, b, "same text at different wall-clock times differs");
@@ -93,7 +93,7 @@ describe("shimmer: classic mode", () => {
   });
 
   test("long messages move no more than 1 cell per 30fps frame (constant velocity)", () => {
-    // At 30 cells/s and a 33ms frame the position delta is ≤ 1. Compare the
+    // At 20 cells/s and a 33ms frame the position delta is ≤ 1. Compare the
     // crest index between two frames: it must advance by ≤1 (or wrap).
     const text = "This is a deliberately long working message to test velocity";
     const pos = (time) => {

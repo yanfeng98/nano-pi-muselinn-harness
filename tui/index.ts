@@ -58,6 +58,22 @@ const rt: TuiRuntime = {
   spinnerTimer: null,
 };
 
+// ── Shimmer ANSI resolver ─────────────────────────────────────
+// The compiled-palette cache in shimmer.ts is keyed on the resolver object
+// identity — allocating a fresh resolver per render would defeat it (every
+// frame would re-resolve ANSI for each palette tier). Reuse one resolver
+// per Theme instance; the cache auto-invalidates when pi swaps themes
+// (ctx.ui.theme returns the current Theme).
+let shimmerResolverFor: any = null;
+let shimmerResolver: { fgAnsi(color: string): string } | null = null;
+function getShimmerResolver(theme: any): { fgAnsi(color: string): string } {
+  if (shimmerResolverFor !== theme) {
+    shimmerResolverFor = theme;
+    shimmerResolver = { fgAnsi: (color) => theme.getFgAnsi(color as any) };
+  }
+  return shimmerResolver!;
+}
+
 // ── Border slots ──────────────────────────────────────────────
 
 /**
@@ -97,7 +113,7 @@ function slotLeft(): string {
         parts.push(
           shimmerText(
             rt.workingMessage,
-            { fgAnsi: (color) => theme.getFgAnsi(color as any) },
+            getShimmerResolver(theme),
             mode as ShimmerMode,
             Date.now(),
           ),

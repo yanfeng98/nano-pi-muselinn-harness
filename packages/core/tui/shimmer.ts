@@ -48,7 +48,11 @@ export interface AnsiResolver {
 // Band/head travel speed in cells per second. Fixed velocity (instead of a
 // fixed sweep duration) keeps per-frame movement ≤1 cell at ≥30fps for any
 // string length — smoothness independent of message length.
-const SHIMMER_SPEED_CELLS_PER_S = 30;
+// Band/head travel speed in cells per second. 20 cells/s keeps per-frame
+// movement ≤1 cell at ≥20fps, and ~2 cells/frame at the 10fps keep-alive
+// floor — a compromise between sweep smoothness and full-tree render cost
+// on large sessions (see keepalive.ts).
+const SHIMMER_SPEED_CELLS_PER_S = 20;
 
 // ─── Classic sweep tunables ──────────────────────────────────────────────────
 const CLASSIC_PADDING = 10;
