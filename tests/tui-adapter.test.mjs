@@ -49,8 +49,9 @@ class MockCustomEditor {
   isShowingAutocomplete() { return false; }
   render(width) {
     const pad = " ".repeat(Math.min(this.paddingX, Math.max(0, Math.floor((width - 1) / 2))));
-    const content = pad + (this.text || "");
-    return ["\u2500".repeat(width), content];
+    const inner = Math.max(1, width - pad.length * 2);
+    const content = (pad + (this.text || "")).slice(0, width);
+    return ["\u2500".repeat(width), content.padEnd(width, " ")];
   }
 }
 
@@ -198,6 +199,15 @@ describe("tui adapter: working-state render path", () => {
       const lines = ["  Hello  "];
       const wrapped = box.wrapWithSideBorders(lines, (s) => s, {});
       assert.equal(wrapped[0], "\u2502 Hello \u2502", "│ <text> │ layout");
+
+      // First content line carries a prompt chevron in the padding column.
+      editor.setText("Hello");
+      const rendered = editor.render(84);
+      const contentPlain = rendered[1].replace(/\x1b\[[0-9;]*m/g, "");
+      assert.ok(contentPlain.includes("\u276F"), "prompt chevron on the first content line");
+      // Chevron occupies the padding slot: │❯ text │ (no width shift).
+      assert.equal([...contentPlain].length, 84, "content line stays 84ch with chevron");
+      assert.ok(contentPlain.startsWith("\u2502\u276F"), "│❯ at line start");
     } finally {
       for (const h of m.handlers.get("session_shutdown") ?? []) h();
       if (tuiMod.__tuiRuntime.spinnerTimer) {

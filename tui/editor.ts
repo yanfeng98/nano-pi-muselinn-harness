@@ -108,7 +108,16 @@ export class MuselinnEditor extends CustomEditor {
         out = [...lines];
         out[0] = composeTopBorder(width, this.slots.left(), this.slots.right(), paint, false);
       } else if (this.chromeStyle === "boxed") {
-        out = wrapWithSideBorders(lines, paint, {
+        // First content line gets a prompt chevron in the inner padding
+        // column (the left │ bar occupies column 0 after wrapping). The
+        // chevron sits in the padding space, so text and cursor position
+        // are unaffected — it reads like a shell prompt: │❯ text │
+        const decorated = [...lines];
+        const contentLine = decorated[1];
+        if (contentLine && contentLine.length > 1 && contentLine[1] === " ") {
+          decorated[1] = contentLine.slice(0, 1) + paint("\u276F") + contentLine.slice(2);
+        }
+        out = wrapWithSideBorders(decorated, paint, {
           topBorder: composeTopBorder(width, this.slots.left(), this.slots.right(), paint, true),
         });
       }
