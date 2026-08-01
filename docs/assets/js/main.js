@@ -260,27 +260,25 @@
   var TYPE_SCENES = {
     goal: {
       title: "goal · lifecycle",
+      badges: { goal: "active" },
       lines: [
         ["cmd", "$ /goal Ship v0.8 with all 269 tests green"],
-        ["ok",  "● Goal: active · turns 0 · no budget"],
         ["dim", "  context injected: <untrusted_objective>"],
         ["dim", "  working through the queue..."],
         ["ok",  "✓ criterion verified: tests 269/269 green"],
         ["ok",  "● Goal: complete · 14 turns · 6m12s"],
-        ["cmd", "$ /goal budget 50 turns"],
-        ["dim", "  budget set: turnBudget=50 (next goal)"],
       ],
     },
     plan: {
       title: "plan · read-only first",
+      planBadge: true,
       lines: [
         ["cmd", "$ /plan Refactor the renderer into modules"],
-        ["dim", "● plan mode: write tools restricted to plan file"],
+        ["dim", "  plan mode: write tools restricted to plan file"],
         ["dim", "  exploring: tui/box.ts, tui/editor.ts, swarm/widget.ts"],
         ["ok",  "  plan written → .pi/plans/PLAN.md"],
         ["cmd", "$ exit_plan_mode (approve)"],
         ["ok",  "✓ plan approved — execution unlocked"],
-        ["dim", "  editor top border shows: ╭ plan ───────╮"],
       ],
     },
     permission: {
@@ -289,6 +287,8 @@
         ["cmd", "$ git push --force origin main"],
         ["warn","⚠ destructive command detected — approval required"],
         ["dim", "  policy: destructive-ask-always (never short-circuited)"],
+        ["dim", "  ── approval dialog ──"],
+        ["dim", "  1) Allow once  2) Always allow  3) Deny  4) Deny with reason"],
         ["cmd", "$ cat .env"],
         ["err", "✗ blocked: sensitive file guard (.env)"],
         ["dim", "  mode: yolo — safety policies run before mode rules"],
@@ -307,13 +307,14 @@
     },
     tui: {
       title: "tui · boxed editor",
+      switchCompact: true,
       lines: [
-        ["box", "⠋ Streaming · plan"],
         ["box", "tell me about the swarm module"],
         ["cmd", "$ /tui style compact"],
-        ["dim", "─ ⣾ Running tools ──────────── deepseek-v4 ─"],
+        ["dim", "  editor chrome: boxed → compact (hot-swap, no restart)"],
+        ["box", "─ ⣾ Running tools ──────── (opencode-go) deepseek-v4-flash ─"],
         ["cmd", "$ /tui timing"],
-        ["dim", "editor: n=240 mean=0.31ms p50=0.28ms p99=1.2ms"],
+        ["dim", "  editor: n=240 mean=0.31ms p50=0.28ms p99=1.2ms"],
       ],
     },
   };
@@ -334,6 +335,64 @@
     return set[kind] || "#c4cede";
   }
 
+  // ── Full Pi TUI frame for typewriter scenes ──
+  // header (quiet startup) + chat lines + boxed/compact editor + footer
+  // with harness badges. Mirrors what a real session shows.
+  function tuiFrame(scene, chatHtml, editorStyle, colors) {
+    var dim = function (s) { return '<span style="color:' + colors.dim + '">' + s + '</span>'; };
+    var accent = function (s) { return '<span style="color:' + colors.box + '">' + s + '</span>'; };
+    var textDim = function (s) { return '<span style="color:' + colors.dim + '">' + s + '</span>'; };
+
+    var header = accent("pi") + '<span style="color:' + colors.dim + '"> v0.83.0</span>\n' +
+      dim("escape interrupt · ctrl+c/ctrl+d clear/exit · / commands · ! bash · ctrl+o more") + "\n" +
+      dim("Press ctrl+o to show full startup help and loaded resources.") + "\n";
+
+    var body = chatHtml;
+
+    // Editor
+    var spinner = "\u280B"; // ⠋ (static in type scenes)
+    var left = accent(spinner + " ") + dim("Idle");
+    var right = dim("(opencode-go) deepseek-v4-flash");
+    var W = window.PiDemoTermW || 84;
+    var paint = function (s) { return '<span style="color:' + colors.dim + '">' + s + '</span>'; };
+    var dash = function (n) { return paint("\u2500".repeat(Math.max(0, n))); };
+
+    var editorHtml;
+    if (editorStyle === "compact") {
+      var fillC = Math.max(0, W - lw - rw - 6);
+      editorHtml = dash(1) + " " + left + " " + dash(fillC) + " " + right + " " + dash(1) + "\n";
+    } else {
+      var innerW = W - 2;
+      var fill2 = Math.max(0, innerW - lw - rw - 6);
+      var top = paint("\u256D") + dash(1) + " " + left + " " + dash(fill2) + " " + right + " " + dash(1) + paint("\u256E");
+      var blank = paint("\u2502") + " ".repeat(innerW) + paint("\u2502");
+      var bottom = paint("\u2570") + dash(innerW) + paint("\u256F");
+      editorHtml = top + "\n" + blank + "\n" + bottom + "\n";
+    }
+
+    // Footer + badges
+    var badges = [
+      '<span style="color:' + colors.warn + '">manual</span>',
+      '<span style="color:' + colors.box + '">swarm</span>',
+    ];
+    if (scene.badges && scene.badges.goal === "complete") {
+      badges.push('<span style="color:' + colors.ok + '">[goal ● complete]</span>');
+    } else {
+      badges.push('<span style="color:' + colors.ok + '">[goal ● active]</span>');
+    }
+    if (scene.planBadge) {
+      badges.push('<span style="color:' + colors.warn + '">plan</span>');
+    }
+    var footerLeft = textDim("0.0%/1.0M (auto)");
+    var footerMid = '<span style="color:#c4cede">(opencode-go) deepseek-v4-flash</span>';
+    var badgeStr = badges.join(" ");
+    var used = footerLeft.replace(/<[^>]*>/g, "").length + footerMid.replace(/<[^>]*>/g, "").length + badgeStr.replace(/<[^>]*>/g, "").length;
+    var pad = Math.max(1, W - used);
+    var footer = footerLeft + " " + footerMid + " ".repeat(pad) + badgeStr + "\n";
+
+    return header + "\n" + body + editorHtml + footer;
+  }
+
   function startTypeScene(name) {
     var scene = TYPE_SCENES[name];
     if (!scene) return;
@@ -342,9 +401,27 @@
     var pre = document.createElement("pre");
     pre.className = "demo-pre";
     bodyEl.appendChild(pre);
-    var li = 0, ci = 0, cur = null, curBox = null;
+    var colors = root.getAttribute("data-theme") === "light" ? TYPE_COLORS.light : TYPE_COLORS.dark;
+
+    var chatLines = []; // [{kind, text}] accumulated so far
+    var li = 0, ci = 0, cur = null;
+    var compact = false;
+
+    function render() {
+      var chatHtml = chatLines.map(function (l) {
+        return '<span style="color:' + typeColor(l.kind) + '">' + l.text + "</span>\n";
+      }).join("");
+      if (cur) {
+        chatHtml += '<span style="color:' + typeColor(chatLines.length ? cur.kind : "cmd") + '">' + cur.text + "</span>";
+      }
+      pre.innerHTML = tuiFrame(scene, chatHtml, compact ? "compact" : "boxed", colors);
+    }
+
     function step() {
       if (li >= scene.lines.length) {
+        // Goal scene flips the badge to complete at the end.
+        if (name === "goal") scene.badges = { goal: "complete" };
+        render();
         typeTimer = setTimeout(function () {
           if (runningScene === name) startTypeScene(name);
         }, 7000);
@@ -353,36 +430,36 @@
       var kind = scene.lines[li][0];
       var text = scene.lines[li][1];
       if (kind === "box") {
-        // Box lines appear instantly (no typewriter); consecutive boxes accumulate
-        // into one .demo-box div.
-        if (!curBox) {
-          curBox = document.createElement("div");
-          curBox.className = "demo-box";
-          pre.appendChild(curBox);
-        }
-        curBox.textContent = (curBox.textContent ? curBox.textContent + "\n" : "") + text;
-        var nextKind = scene.lines[li + 1] && scene.lines[li + 1][0];
-        if (nextKind !== "box") { curBox = null; }
+        // Box lines land in the editor border area — for the tui scene they
+        // just render as chat lines styled with the accent color.
+        chatLines.push({ kind: "box", text: text });
         li++;
-        pre.appendChild(document.createTextNode(nextKind === "box" ? "" : "\n"));
+        render();
         typeTimer = setTimeout(step, 260);
-      } else {
-        if (!cur) {
-          cur = document.createElement("span");
-          cur.style.color = typeColor(kind);
-          pre.appendChild(cur);
-          ci = 0;
-        }
-        cur.textContent = text.slice(0, ++ci);
+        return;
+      }
+      if (kind === "cmd") {
+        // Commands type out; everything else appears instantly.
+        if (!cur) { cur = { kind: kind, text: "" }; ci = 0; }
+        cur.text = text.slice(0, ++ci);
+        render();
         if (ci >= text.length) {
-          pre.appendChild(document.createTextNode("\n"));
+          chatLines.push({ kind: kind, text: text });
           cur = null; li++;
           typeTimer = setTimeout(step, 260);
         } else {
           typeTimer = setTimeout(step, 12);
         }
+        return;
       }
+      chatLines.push({ kind: kind, text: text });
+      li++;
+      // tui scene: switch to compact chrome after the /tui style command.
+      if (name === "tui" && kind === "cmd" && /\/tui style compact/.test(text)) compact = true;
+      render();
+      typeTimer = setTimeout(step, 260);
     }
+    render();
     step();
   }
 

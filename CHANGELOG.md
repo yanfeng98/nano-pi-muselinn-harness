@@ -10,6 +10,15 @@ All notable changes to pi-muselinn-harness, in reverse chronological order.
   TUI input loop right after the interface rendered. Matches pi core's own
   background refresh behavior in `main.ts`.
 
+**Docs & site:**
+- README restructured for new users (what-is-this table, quick start) and the
+  11 versions of release notes moved to a dedicated `CHANGELOG.md`; Pages
+  home reworked with a quick-start section and a changelog page.
+- Pages demo terminal now simulates the actual Pi + harness TUI: quiet-startup
+  header, loaded-resources block, braille swarm grid widget, `╭╮│╰╯` boxed
+  editor with spinner + model in the border, and the status-bar badges
+  (permission mode / swarm / goal / agent count).
+
 ## 0.9.13
 
 **Plan mode Kimi Code full alignment:**
