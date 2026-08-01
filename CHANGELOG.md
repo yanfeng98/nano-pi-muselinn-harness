@@ -2,6 +2,14 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
+## 0.9.17
+
+**Miscellaneous:**
+- README (EN/中): releasing instructions moved from the user-facing README
+  to the bottom of `CHANGELOG.md` (maintainer-only workflow); the release
+  tag command now derives the version dynamically instead of a stale
+  hardcoded `v0.9.1`.
+
 ## 0.9.16
 
 **todo_list tool prompts de-ambiguated:**
