@@ -29,12 +29,16 @@ jobs:
       # Release body comes from CHANGELOG.md (single source of truth),
       # not PR aggregation — direct-to-main commits would otherwise ship
       # as "No changes". The script fails if the version section is missing.
-      - name: Build release body from CHANGELOG.md
+      # gh CLI (preinstalled) avoids third-party actions that still run on
+      # the deprecated node 20 runtime.
+      - name: Publish release from CHANGELOG.md
         env:
+          GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
         run: |
           node .github/scripts/release-body.mjs > "$RUNNER_TEMP/release-body.md"
-      - uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          body_path: $RUNNER_TEMP/release-body.md
+          gh release create "$RELEASE_TAG" \
+            --title "$RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/release-body.md" \
+          || gh release edit "$RELEASE_TAG" \
+            --notes-file "$RUNNER_TEMP/release-body.md"
