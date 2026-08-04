@@ -25,6 +25,8 @@ jobs:
       - run: cp CHANGELOG.md docs/_includes/changelog.md
       - uses: actions/configure-pages@v5
       - uses: actions/jekyll-build-pages@v1
+        with:
+          source: docs
       - uses: actions/upload-pages-artifact@v3
 
   deploy:
