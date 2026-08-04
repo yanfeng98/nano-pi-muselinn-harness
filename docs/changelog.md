@@ -8,6 +8,28 @@ title: Changelog — pi-muselinn-harness
 <p>All notable changes, in reverse chronological order. The full file lives at
 <a href="https://github.com/MuseLinn/pi-muselinn-harness/blob/main/CHANGELOG.md">CHANGELOG.md</a>.</p>
 
+## 0.9.18
+
+**Persistent startup permission mode:**
+- `"defaultMode": "auto" | "yolo" | "manual"` in `~/.pi/agent/permissions.json`
+  (global) or `.pi/permissions.json` (project; global wins on conflict)
+  replaces the hardcoded `manual` startup mode — new sessions start in your
+  preferred mode without an interactive `/mode` call. Sessions with a
+  recorded `/mode` history still restore the last used mode; `defaultMode`
+  is the starting point for fresh sessions. Thanks @jason-in-hub for the
+  contribution (PR #1)!
+
+**CI / tooling:**
+- Test matrix on Node 24/26 with actions v5 — the node-20 deprecation
+  annotations are gone
+- GitHub Releases now generated from CHANGELOG.md (single source of truth)
+  instead of PR aggregation — a release can no longer ship with an empty
+  "What's new"
+
+**Docs & housekeeping:**
+- README + site document `defaultMode`; compatibility updated to Node 24/26
+- Stale tags v0.3.0 / v0.9.4 (never shipped to npm) removed
+
 ## 0.9.17
 
 **Miscellaneous:**
