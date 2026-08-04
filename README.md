@@ -4,7 +4,7 @@
 
 **Kimi Code-style agent orchestration for the [Pi coding agent](https://pi.dev)** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI, one package that builds the features Pi deliberately skips (sub-agents, plan mode, todo, …) and aligns them with Kimi Code's subsystem behavior.
 
-Compatible with pi 0.81.x–0.83.x on macOS, Ubuntu, and Windows · Node 24/26 · CI-tested on Ubuntu + Windows.
+Compatible with pi 0.81.x–0.83.x on macOS, Ubuntu, and Windows · Node 24/26 · CI-tested on macOS + Ubuntu + Windows.
 
 ![Closed-box editor with streaming state in the top border](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
 
@@ -293,8 +293,8 @@ node tests/stream-rules.test.mjs                  # stream entry rules — 14
 
 The suites run on Node 22/24/26 (22.6–22.17 via
 `--experimental-strip-types`, older legs via `tests/ts-esm-loader.mjs`; 22.18+
-strips types natively). CI runs the full matrix — ubuntu + windows × node
-24/26 — on every push and PR.
+strips types natively). CI runs the full matrix — macOS + ubuntu + windows ×
+node 24/26 — on every push and PR.
 
 ## Roadmap
 
