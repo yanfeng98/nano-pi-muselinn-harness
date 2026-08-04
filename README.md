@@ -152,6 +152,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 
 ### Web fetch
 - **`fetch_url` tool** — no-auth URL fetch (20s timeout, 5MB stream cap, redirect follow); HTML → readable text (dependency-free extractor), JSON → pretty-print, everything else raw; 20k char cap with `max_chars` tuning
+- **Full web access via [pi-web-access](https://pi.dev/packages/pi-web-access)** — recommended companion for `web_search` / `fetch_content` (multi-provider search, GitHub repo cloning, PDF / YouTube / local-video understanding). Its `web_search` and `fetch_content` tools sit in the permission system's read-only allowlist — auto-approved in every mode, including plan mode, so no approval prompts interrupt the flow. Install: `pi install npm:pi-web-access`
 
 ### Plugins (declarative bundles)
 - **`muselinn.plugin.json`** — six declarative capabilities: `skills` (skill dirs merged into discovery), `sessionStart` (context injected on the session's first turn), `hooks` (merged into the `[[hooks]]` engine), `commands` (.md files become slash commands), plus `mcpServers` / `interface` recorded with skipped-diagnostics

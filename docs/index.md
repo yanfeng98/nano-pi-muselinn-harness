@@ -88,24 +88,16 @@ pi install npm:pi-muselinn-harness
 </div>
 </div>
 
-<h2><span data-l="en">New in 0.9.13</span><span data-l="zh">0.9.13 新功能</span></h2>
+<h2><span data-l="en">New in 0.9.18</span><span data-l="zh">0.9.18 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
-### <span data-l="en">Plan mode Kimi Code full alignment</span><span data-l="zh">Plan 模式全面对齐 Kimi Code</span>
-<span data-l="en">Plan injection rewritten to match Kimi Code's plan-mode.ts (full + sparse). enter/exit_plan_mode and plan-file writes auto-approved. Per-tool deny messages for TaskStop, Cron mutations. Plan approval panel shows full file content (removed 500-char truncation).</span><span data-l="zh">Plan 注入文案重写匹配 Kimi Code 的 plan-mode.ts（完整+精简）。enter/exit_plan_mode 和 plan 文件写入自动批准。TaskStop、Cron 变更有具体拒绝消息。Plan 审批面板显示完整文件内容。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Permission dialog + Subagent profiles</span><span data-l="zh">权限弹窗 + 子代理 Profile</span>
-<span data-l="en">"Deny with reason" Esc now returns to options instead of ending the flow. New packages/core/profile/ with CODER/EXPLORE/PLAN profiles aligned with Kimi Code YAML definitions.</span><span data-l="zh">"Deny with reason" 按 Esc 回到选项而非结束。新增 packages/core/profile/ 包含 CODER/EXPLORE/PLAN profile，对齐 Kimi Code YAML。</span>
-</div>
-<div class="card reveal" markdown="1">
-### <span data-l="en">Preview box fix + misc</span><span data-l="zh">预览框修复 + 杂项</span>
-<span data-l="en">Trimmed Markdown trailing whitespace so box borders fit terminal. Accounted for Text paddingX in stacked layout. Replaced non-existent theme color "info" with "accent". "n note" hint only shows when an option has a preview.</span><span data-l="zh">去除 Markdown 尾部空格，盒边框适配终端宽度。堆叠布局计入 Text paddingX。替换不存在的 theme 色 "info" 为 "accent"。"n note" 提示仅在有预览时显示。</span>
+### <span data-l="en">Persistent startup permission mode</span><span data-l="zh">可持久化的启动权限模式</span>
+<span data-l="en">Set <code>"defaultMode": "auto" | "yolo" | "manual"</code> in <code>permissions.json</code> (global <code>~/.pi/agent/</code> or project <code>.pi/</code>, global wins on conflict) and every fresh session starts there — no more interactive <code>/mode</code> on each new session. Sessions with a recorded <code>/mode</code> history still restore the last used mode; <code>defaultMode</code> is the starting point for fresh sessions. Thanks @jason-in-hub for the contribution!</span><span data-l="zh">在 <code>permissions.json</code>（全局 <code>~/.pi/agent/</code> 或项目 <code>.pi/</code>，冲突时全局优先）写入 <code>"defaultMode": "auto" | "yolo" | "manual"</code>，每个新会话都从该模式开始——不再需要每次手动 <code>/mode</code>。记录过 <code>/mode</code> 历史的会话仍恢复上次使用的模式；<code>defaultMode</code> 是新会话的起点。感谢 @jason-in-hub 的贡献！</span>
 </div>
 </div>
 <h2><span data-l="en">Previously</span><span data-l="zh">历史版本</span></h2>
 
-<p><span data-l="en">All earlier release notes moved to the</span><span data-l="zh">更早的版本记录已移至</span> <a href="changelog.html"><span data-l="en">changelog page</span><span data-l="zh">更新日志页</span></a> <span data-l="en">— 0.9.11, 0.9.10, 0.9.9, 0.9.3–0.9.8, 0.9.1, 0.9.0, 0.8.2, 0.7.9, 0.7.8, 0.7.7, 0.7.4/0.7.5.</span><span data-l="zh">— 0.9.11、0.9.10、0.9.9、0.9.3–0.9.8、0.9.1、0.9.0、0.8.2、0.7.9、0.7.8、0.7.7、0.7.4/0.7.5。</span></p>
+<p><span data-l="en">All earlier release notes live on the</span><span data-l="zh">更早的版本记录全部位于</span> <a href="changelog.html"><span data-l="en">changelog page</span><span data-l="zh">更新日志页</span></a> <span data-l="en">— generated from CHANGELOG.md, so it always matches the latest release.</span><span data-l="zh">— 由 CHANGELOG.md 自动生成,与最新发布始终保持一致。</span></p>
 
 <h2><span data-l="en">Commands</span><span data-l="zh">命令</span></h2>
 

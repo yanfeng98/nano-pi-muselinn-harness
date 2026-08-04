@@ -4,7 +4,7 @@
 
 **为 [Pi coding agent](https://pi.dev) 打造的 Kimi Code 风格编排套件** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI，一个包补齐 Pi 刻意不做的能力（子代理、计划模式、任务管理……），全面对齐 Kimi Code 的子系统行为。
 
-已验证兼容 pi 0.81.x–0.83.x（macOS / Ubuntu / Windows）· Node 22/24 · CI 在 Ubuntu + Windows 上全绿。
+已验证兼容 pi 0.81.x–0.83.x（macOS / Ubuntu / Windows）· Node 24/26 · CI 在 macOS + Ubuntu + Windows 上全绿。
 
 ![闭合框编辑器（上边框嵌入流式状态）](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
 
@@ -150,6 +150,7 @@ pi                                      # 重启 pi，然后试试：
 
 ### Web fetch 模块
 - **`fetch_url` 工具** — 无鉴权 URL 抓取（20s 超时、5MB 流上限、跟随重定向）；HTML → 可读文本（零依赖提取器）、JSON → 美化输出、其余原样返回；默认 20k 字符上限，`max_chars` 可调
+- **完整联网能力：[pi-web-access](https://pi.dev/packages/pi-web-access)** — 推荐搭配的 `web_search` / `fetch_content` 扩展（多提供商搜索、GitHub 仓库克隆、PDF / YouTube / 本地视频理解）。其 `web_search` 与 `fetch_content` 已在权限系统的只读豁免名单中——所有模式（含 plan 模式）自动放行，不会打断审批弹窗。安装：`pi install npm:pi-web-access`
 
 ### Plugin 模块（声明式资源包）
 - **`muselinn.plugin.json`** — 六件套声明式能力：`skills`（skill 目录并入发现）、`sessionStart`（会话首轮注入上下文）、`hooks`（并入 `[[hooks]]` 引擎）、`commands`（.md 文件变 slash 命令），以及 `mcpServers` / `interface`（记录并给出 skipped 诊断）
@@ -289,7 +290,7 @@ node tests/renderer.test.mjs                      # 增量渲染器 buffer/tree 
 node tests/stream-rules.test.mjs                  # 流式 entry 规则 14 项
 ```
 
-测试支持 Node 20/22/24（20 走 `tests/ts-esm-loader.mjs` TypeScript 转译 ESM loader；22.6+ 原生擦除类型）。CI 在每次 push 和 PR 上跑完整矩阵——ubuntu + windows × node 20/22。
+测试支持 Node 22/24/26（22.6–22.17 走 `--experimental-strip-types`，更早的用 `tests/ts-esm-loader.mjs` TypeScript 转译；22.18+ 原生擦除类型）。CI 在每次 push 和 PR 上跑完整矩阵——macOS + ubuntu + windows × node 24/26。
 
 
 ## Roadmap
