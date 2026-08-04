@@ -15,7 +15,7 @@ template: |
   ## Compatibility
 
   - pi 0.81.x–0.83.x
-  - Node 22/24
+  - Node 24/26
 
 category-template: "## $TITLE"
 tag-template: "v$RESOLVED_VERSION"

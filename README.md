@@ -4,7 +4,7 @@
 
 **Kimi Code-style agent orchestration for the [Pi coding agent](https://pi.dev)** — Swarm · Goal · Plan · Permission · Ask · Task · Cron · Todo · Hooks · Skills · TUI, one package that builds the features Pi deliberately skips (sub-agents, plan mode, todo, …) and aligns them with Kimi Code's subsystem behavior.
 
-Compatible with pi 0.81.x–0.83.x on macOS, Ubuntu, and Windows · Node 22/24 · CI-tested on Ubuntu + Windows.
+Compatible with pi 0.81.x–0.83.x on macOS, Ubuntu, and Windows · Node 24/26 · CI-tested on Ubuntu + Windows.
 
 ![Closed-box editor with streaming state in the top border](https://muselinn.github.io/pi-muselinn-harness/assets/img/pi-boxed-editor.png)
 
@@ -97,6 +97,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Subagent gating** — swarm worker tool calls run through the same policy chain (shared in-process manager): `/mode` switches propagate to in-flight subagents by construction, `ask` verdicts degrade to blocks (never silent approval)
 - **AGENTS.md hierarchy** — project (nearest `AGENTS.md` or `.kimi-code/AGENTS.md`) → global `$KIMI_CODE_HOME/AGENTS.md` → cross-tool `~/.agents/AGENTS.md`, aggregated; `destructive-ask-always` can upgrade ask to deny
 - **Config cache** — permission config cached by file mtime, edits take effect immediately
+- **Persistent startup mode** — optional `"defaultMode": "auto" | "yolo" | "manual"` in `~/.pi/agent/permissions.json` (global) or `.pi/permissions.json` (project; global wins on conflict) replaces the hardcoded `manual` startup mode, so new sessions start in your preferred mode without an interactive `/mode` call. A session with a recorded `/mode` history still restores the last used mode; `defaultMode` is the starting point for fresh sessions.
 
 ### Task (background + cron)
 - **run_background** — subagent in the background, immediate task ID; `output_path` pages full output via Read
@@ -290,9 +291,10 @@ node tests/renderer.test.mjs                      # incremental renderer buffer/
 node tests/stream-rules.test.mjs                  # stream entry rules — 14
 ```
 
-The suites run on Node 20/22/24 (20 via `tests/ts-esm-loader.mjs`, a
-TypeScript-transpile ESM loader; 22.6+ strips types natively). CI runs the
-full matrix — ubuntu + windows × node 20/22 — on every push and PR.
+The suites run on Node 22/24/26 (22.6–22.17 via
+`--experimental-strip-types`, older legs via `tests/ts-esm-loader.mjs`; 22.18+
+strips types natively). CI runs the full matrix — ubuntu + windows × node
+24/26 — on every push and PR.
 
 ## Roadmap
 
