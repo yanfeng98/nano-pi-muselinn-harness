@@ -13,17 +13,6 @@ All notable changes to pi-muselinn-harness, in reverse chronological order.
   is the starting point for fresh sessions. Thanks @jason-in-hub for the
   contribution (PR #1)!
 
-**CI / tooling:**
-- Test matrix on Node 24/26 with actions v5 — the node-20 deprecation
-  annotations are gone
-- GitHub Releases now generated from CHANGELOG.md (single source of truth)
-  instead of PR aggregation — a release can no longer ship with an empty
-  "What's new"
-
-**Docs & housekeeping:**
-- README + site document `defaultMode`; compatibility updated to Node 24/26
-- Stale tags v0.3.0 / v0.9.4 (never shipped to npm) removed
-
 ## 0.9.17
 
 **Miscellaneous:**
@@ -269,6 +258,10 @@ per subagent. Active agent count shown in the status bar (`[3 agents running]`).
 ---
 
 ## Releasing (maintainers)
+
+Changelog entries describe **user-visible changes only** — CI/tooling/docs
+housekeeping stays in git history, not release notes (the release body is
+generated from CHANGELOG.md, so it inherits this rule).
 
 Tag to mark the release (CI publish removed — publish locally with OTP):
 
