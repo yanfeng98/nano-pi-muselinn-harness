@@ -317,6 +317,18 @@
         ["dim", "  editor: n=240 mean=0.31ms p50=0.28ms p99=1.2ms"],
       ],
     },
+    pause: {
+      title: "pause · freeze & steer",
+      lines: [
+        ["cmd", "$ /pause"],
+        ["dim", "  ⏸ PAUSED — agents hold at their next safe boundary"],
+        ["dim", "  <tool_call> · in-flight calls finish; nothing new starts"],
+        ["dim", "  paused for 0:14 · esc/enter/space/ctrl+c 释放"],
+        ["cmd", "$ /steer 002 只看 tests/ 目录"],
+        ["ok",  "  ✓ steered 002 — transcript reflects the new direction"],
+        ["dim", "  agents/002/wire.jsonl · c = conversation view"],
+      ],
+    },
   };
 
   var TYPE_COLORS = {

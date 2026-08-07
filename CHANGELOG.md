@@ -2,6 +2,29 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
+## 0.9.19
+
+**Freeze & steer — `/pause` · transcript · `/steer`:**
+
+- **`/pause` full-screen freeze** — the main agent and every swarm subagent
+  park at their next safe boundary (tool-call gate): in-flight calls run to
+  completion, nothing is aborted, and a later release continues exactly where
+  each loop parked. A full-screen overlay (theme-colored pause glyph + live
+  hold timer, terminal background as the backdrop) covers the terminal;
+  esc/enter/space/ctrl+c releases. Releasing leaves a status line in the
+  session transcript (`已恢复（暂停 13s）— 代理继续运行`), omp-style.
+- **Transcript recording** — every subagent's conversation is written to
+  `<sessionDir>/agents/<taskId>/wire.jsonl` (user / assistant → tool-call
+  lines with timestamps, stop reasons and usage; tool arguments deliberately
+  omitted). The task browser (`/tasks`, `ctrl+shift+t`) gains a conversation
+  view (`c` key) showing formatted transcript lines.
+- **`/steer <taskId> <message>`** — injects a message into a running subagent
+  (swarm session or background task; Tab-completed task ids); the agent loop
+  delivers it once the current tool call completes.
+- **Pause overlay rendering fixes** — colors come from the active theme
+  (`accent`/`text`/`muted`/`dim`), and block glyphs (█ / ⏸) are measured
+  single-width so the pause symbol centers exactly with the text below.
+
 ## 0.9.18
 
 **Persistent startup permission mode:**

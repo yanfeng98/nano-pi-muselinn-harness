@@ -18,6 +18,7 @@ harness 以 [Kimi Code](https://www.kimi.com/code) 的风格把它们一次性�
 | 并行子代理 | `agent_swarm` / `agent` — 真实 `max_concurrency`、实时盲文网格 TUI、`run_in_background`、`/resume` |
 | 先谋后动 | `enter_plan_mode` — 只读探索、审批门禁、Kimi Code 权限模型 |
 | 有始有终 | `/goal` — 生命周期、预算、队列、完成判据门禁 |
+| 冻结与转向 | `/pause` 全屏冻结 · 子代理 transcript 落盘 · `/steer` 运行中注入 |
 | 安全护栏 | 18 级权限链（`auto` / `yolo` / `manual`）、破坏性命令 + `.env` 守卫 |
 | 跨轮次的工作 | `run_background` + `cron_create` — 持久后台任务与定时提示 |
 | 好好提问 | `ask_user_question` — 标签页多题对话框，支持预览 |
@@ -39,6 +40,7 @@ pi                                      # 重启 pi，然后试试：
 /goal Refactor the auth module           # 设置目标，跟踪预算
 /todo init "Phase 1: scanner"            # 开始分阶段任务计划
 /plan                                    # 进入计划模式（只读探索）
+/pause                                   # 全屏冻结一切；esc/enter/space/ctrl+c 恢复
 /tui style plain|boxed|compact           # 随时切换编辑器样式
 ```
 
@@ -65,6 +67,13 @@ pi                                      # 重启 pi，然后试试：
 - **自适应布局** — pi-tui Component 协议渲染，状态栏宽度随终端自适应（10–60）
 - **三栏任务浏览器** — 状态字形（○ pending / ◐ running / ✓ done / ✗ failed / ▲ aborted）+ 完成行删除线、溢出折叠（`+N more`，优先保留 running）、命名键位路由、`ctrl+shift+t` 快捷键
 - **取消/恢复** — UserCancellationError + AbortSignal 链，`/cancel` 两步确认
+
+### Pause & Steer（冻结、检视、转向）
+- **`/pause` 全屏冻结** — 主代理与所有 swarm 子代理在下一个安全边界挂起（工具门卫）：进行中的调用跑完，什么都不中止，释放后各自从挂起点继续。全屏遮罩——主题色暂停符号、实时计时——esc/enter/space/ctrl+c 释放，并在会话流中留下状态行（`已恢复（暂停 13s）— 代理继续运行`）；暂停落在工具边界时遮罩带 `<tool_call>` 标签
+- **Transcript 落盘** — 每个子代理的对话写入 `<sessionDir>/agents/<taskId>/wire.jsonl`（user / assistant → tool-call 行，含时间戳、stop reason、usage；**刻意不落工具参数**）。任务浏览器（`/tasks` / `ctrl+shift+t`）按 `c` 键看对话视图，或直接用 Read 读文件
+- **`/steer <taskId> <message>`** — 向运行中的子代理注入消息（swarm 会话或后台任务；task id 支持 Tab 补全）。代理循环在当前工具调用完成后投递——无需取消/重启
+- **安全边界** — 取消单个挂起的运行（AbortSignal）只释放该次等待，绝不动门禁；后台任务（`run_background`）不冻结（其工具调用不经 harness 门卫），但同样获得 transcript 与 steer
+- **主题色遮罩** — 图标/标题/正文/提示全部使用当前主题的 `accent`/`text`/`muted`/`dim`，终端背景即遮罩底色；块字符（█ / ⏸）按单宽计量，暂停符号与下方文字精确对齐居中
 
 ### Goal 模块
 - **Goal 生命周期** — active / paused / blocked / complete / usage_limited / budget_limited
@@ -164,6 +173,8 @@ pi                                      # 重启 pi，然后试试：
 | 命令 | 说明 |
 |------|------|
 | `/swarm on\|off` | 开关 Swarm 模式 |
+| `/pause` | 冻结所有代理到下一个安全边界（esc/enter/space/ctrl+c 恢复） |
+| `/steer <taskId> <message>` | 向运行中的子代理发送消息 |
 | `/cancel` | 取消当前任务（两步确认） |
 | `/resume` | 恢复中断的 swarm |
 | `/tasks` | 打开任务浏览器（快捷键 `ctrl+shift+t`） |
@@ -204,7 +215,7 @@ pi                                      # 重启 pi，然后试试：
 | 嵌套子 Agent（coder 再派发） | ❌ | 有意不开放——防止递归派发失控，子 Agent 工具集不含 agent/agent_swarm |
 | 权限继承 | ✅ | worker 工具调用经过进程内共享的 18 级策略链；`/mode` 切换天然传播，ask 降级为阻断 |
 | 指令文件层级 | ✅ | 项目级 `AGENTS.md` / `.kimi-code/AGENTS.md` → `$KIMI_CODE_HOME/AGENTS.md` → `~/.agents/AGENTS.md`，聚合生效 |
-| 会话目录 wire.jsonl 持久化 | ❌ | 子 Agent 用 SessionManager.inMemory()，状态不落盘（进程内生命周期） |
+| 会话目录 wire.jsonl 持久化 | ⚠️ | 每个子代理 transcript 落盘（`agents/<id>/wire.jsonl`，user/assistant/tool-call，不落工具参数）+ 对话查看器；完整会话恢复待 pi-coding-agent API |
 | Hooks（`[[hooks]]` 生命周期钩子） | ✅ | 16 个事件全覆盖，退出码/stdout JSON 阻断语义，fail-open |
 | Agent Skills（四级作用域） | ✅+ | 完整覆盖 Kimi 四级目录，并扩展为 pi 原生七级；目录型+扁平型，子代理与主会话双通道 |
 
@@ -230,6 +241,7 @@ pi-muselinn-harness/
 │   ├── goal/              Goal 模块（状态机 + 预算 + 队列 + 持久化）
 │   ├── plan/              Plan 模块（工具白名单 + 路径守卫 + 注入）
 │   ├── permission/        Permission 模块（18 级策略链 + 审批契约）
+│   ├── pause/             暂停门禁 + 全屏遮罩布局（纯函数，主题可注入）
 │   ├── hooks/             Hooks 模块（TOML 迷你解析 + 执行器 + 16 事件）
 │   ├── skills/            Skills 模块（frontmatter + 七级扫描）
 │   ├── swarm/             swarm 纯逻辑半
@@ -245,6 +257,7 @@ pi-muselinn-harness/
 │   └── tui/               box/config/parse/switch/timing（纯 chrome 件）
 ├── swarm/                 适配层：子代理执行、/swarm 命令、
 │                          SwarmWidgetComponent、三栏任务浏览器
+├── pause/                 适配层：/pause 遮罩组件、/steer 命令
 ├── task/                  适配层：后台任务管理（会话 spawn）
 ├── tui/                   适配层：MuselinnEditor + 事件接线
 ├── ask/                   适配层：提问对话框 + ask_user_question 工具
@@ -256,7 +269,7 @@ pi-muselinn-harness/
 
 ## 测试
 
-无需模型额度的 node 级单元测试（23 个套件，660+ 项断言）：
+无需模型额度的 node 级单元测试（27 个套件，800+ 项断言）：
 
 ```bash
 npm test                                        # 全部套件（node tests/run-all.mjs）
@@ -279,6 +292,9 @@ node tests/agent-file.test.mjs                   # agent 文件发现/解析 —
 node tests/agent-lifecycle.test.mjs               # agent 生命周期事件 — 6
 node tests/ask.test.mjs                           # ask 规格/对话框/答案/审批标题 123 项
 node tests/tool-policy.test.mjs                  # 工具策略门控 — 13
+node tests/pause-gate.test.mjs                    # 暂停门禁 + 全屏渲染 — 55
+node tests/transcript.test.mjs                     # transcript wire.jsonl 落盘 — 26
+node tests/steering.test.mjs                       # steering 队列 drain — 8
 node tests/todo.test.mjs                          # todo 模型 + 折叠策略 21 项
 node tests/shell-output.test.mjs                  # 输出净化器 21 项
 node tests/shimmer.test.mjs                     # shimmer 扫描动画引擎 — 10
@@ -298,7 +314,7 @@ node tests/stream-rules.test.mjs                  # 流式 entry 规则 14 项
 - **i18n** — harness 界面文案与通知双语化（文档已拆分中英；项目页已有 EN/中 切换）
 - **公式渲染转正** — 待压缩路径的上下文安全性确认后，合入 `feature/math-renderer`
 - **clustered diff 预览** — edit/write 审批消息中的 ±3 行聚簇 diff（P1 批次延迟项）
-- **真全屏** — container swap 全屏（kimi 任务浏览器模式），不用 alt screen，保留终端 scrollback
+- **真全屏** — 暂停遮罩已覆盖整个终端（0.9.19 已发布）；任务浏览器 container swap 全屏（kimi 任务浏览器模式）仍待做，不用 alt screen，保留终端 scrollback
 
 ## 依赖
 

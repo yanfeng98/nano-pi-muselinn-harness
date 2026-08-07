@@ -18,6 +18,7 @@ import {
   routeViewerKey,
   type KeyMatchFn,
 } from "../packages/core/swarm/task-list-utils";
+import { formatTranscriptLine } from "../packages/core/swarm/transcript";
 
 const ELLIPSIS = "…";
 const MIN_WIDTH = 48;
@@ -123,6 +124,7 @@ export class TasksBrowserComponent extends Container {
   private viewerFollowTail = true;
   private viewerOutputLines: string[] = [];
   private viewerTaskId = "";
+  private viewerMode: "output" | "conversation" = "output";
 
   constructor(props: TasksBrowserProps, theme: any) {
     super();
@@ -302,11 +304,26 @@ export class TasksBrowserComponent extends Container {
         if (task) {
           // Open full-screen output viewer with real output
           this.viewerOpen = true;
+          this.viewerMode = "output";
           this.viewerScrollTop = 0;
           this.viewerFollowTail = true;
           this.viewerTaskId = task.id;
           // P0 fix: keep only the most recent MAX_VIEWER_LINES lines for the viewer to bound memory.
           this.viewerOutputLines = (task.outputLines || []).slice(-MAX_VIEWER_LINES);
+          this.invalidate();
+        }
+        return;
+      }
+      case "openConversation": {
+        const task = this.sortedVisible[this.selectedIndex];
+        // Only tasks with a captured transcript respond to `c`.
+        if (task && (task.transcriptLines?.length ?? 0) > 0) {
+          this.viewerOpen = true;
+          this.viewerMode = "conversation";
+          this.viewerScrollTop = 0;
+          this.viewerFollowTail = true;
+          this.viewerTaskId = task.id;
+          this.viewerOutputLines = task.transcriptLines!.slice(-MAX_VIEWER_LINES).map(formatTranscriptLine);
           this.invalidate();
         }
         return;
@@ -403,6 +420,7 @@ export class TasksBrowserComponent extends Container {
     const parts = [
       ` ${key("↑↓")} ${dim("select")}`,
       `${key("Enter/O")} ${dim("output")}`,
+      `${key("C")} ${dim("conversation")}`,
       `${key("S")} ${dim("stop")}`,
       `${key("R")} ${dim("refresh")}`,
       `${key("Tab")} ${dim("filter")}`,
@@ -693,7 +711,8 @@ export class TasksBrowserComponent extends Container {
 
     // Header
     const task = this.sortedVisible.find((t) => t.id === this.viewerTaskId);
-    const titleText = styledBoldFg(t, "accent", ` OUTPUT: ${this.viewerTaskId} `);
+    const modeTitle = this.viewerMode === "conversation" ? "CONVERSATION" : "OUTPUT";
+    const titleText = styledBoldFg(t, "accent", ` ${modeTitle}: ${this.viewerTaskId} `);
     const statusText = task ? styledFg(t, statusColorName(task.status), ` ${statusLabel(task.status)} `) : "";
     const header = fitExactly(titleText + statusText, width);
 
@@ -710,7 +729,10 @@ export class TasksBrowserComponent extends Container {
     // Body
     const bodyHeight = Math.max(4, rows - 4);
     if (totalLines === 0) {
-      const lines: string[] = [styledFg(t, "muted", "[no output captured]")];
+      const emptyMsg = this.viewerMode === "conversation"
+        ? "[no conversation captured — 子代理运行期间按 C 查看]"
+        : "[no output captured]";
+      const lines: string[] = [styledFg(t, "muted", emptyMsg)];
       while (lines.length < bodyHeight) lines.push("");
       return [
         fitExactly(header, width),

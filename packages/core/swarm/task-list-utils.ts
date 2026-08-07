@@ -178,6 +178,7 @@ export type BrowserKeyAction =
   | "refresh"
   | "requestStop"
   | "openOutput"
+  | "openConversation"
   | "confirmStop"
   | "dismissStop"
   | "ignore";
@@ -204,6 +205,7 @@ export function routeBrowserKey(
   if (match(data, "r") || match(data, "shift+r")) return "refresh";
   if (match(data, "s") || match(data, "shift+s")) return "requestStop";
   if (match(data, "o") || match(data, "shift+o") || match(data, "tui.select.confirm")) return "openOutput";
+  if (match(data, "c") || match(data, "shift+c")) return "openConversation";
   return "ignore";
 }
 

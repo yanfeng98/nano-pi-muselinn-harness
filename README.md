@@ -19,6 +19,7 @@ as a single install:
 | Parallel sub-agents | `agent_swarm` / `agent` — real `max_concurrency`, live braille-grid TUI, `run_in_background`, `/resume` |
 | Plan before execution | `enter_plan_mode` — read-only exploration, approval gate, Kimi Code permission model |
 | Stay on task | `/goal` — lifecycle, budgets, queue, completion-criterion gate |
+| Freeze & steer | `/pause` full-screen freeze · subagent transcripts · `/steer` runtime injection |
 | Safety rails | 18-level permission chain (`auto` / `yolo` / `manual`), destructive-command + `.env` guards |
 | Work that outlives the turn | `run_background` + `cron_create` — persistent tasks and scheduled prompts |
 | The agent asks properly | `ask_user_question` — tabbed multi-question dialog with previews |
@@ -40,6 +41,7 @@ Try it out:
 /goal Refactor the auth module           # set a goal with budget tracking
 /todo init "Phase 1: scanner"            # start a phased task plan
 /plan                                    # enter plan mode (read-only exploration)
+/pause                                   # freeze everything; esc/enter/space/ctrl+c resumes
 /tui style plain|boxed|compact           # switch editor chrome anytime
 ```
 
@@ -67,6 +69,31 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Adaptive layout** — pi-tui Component protocol, status bar width adapts to the terminal (10–60)
 - **Three-pane task browser** — status glyphs (○ pending / ◐ running / ✓ done / ✗ failed / ▲ aborted), strikethrough on done rows, overflow collapse (`+N more`, running kept first), named keybindings, `ctrl+shift+t`
 - **Cancel / resume** — UserCancellationError + AbortSignal chain, two-step `/cancel`
+
+### Pause & steer (freeze, inspect, redirect)
+- **`/pause` full-screen freeze** — the main agent and every swarm subagent
+  park at their next safe boundary (tool-call gate): in-flight calls run to
+  completion, nothing is aborted, and a later release continues exactly where
+  each loop parked. A full-screen overlay — theme-colored pause glyph, live
+  hold timer — covers the terminal; esc/enter/space/ctrl+c releases, leaving a
+  status line in the session transcript (`已恢复（暂停 13s）— 代理继续运行`).
+  When the pause lands mid-tool, the overlay tags it `<tool_call>`.
+- **Transcript recording** — every subagent's conversation is written to
+  `<sessionDir>/agents/<taskId>/wire.jsonl` (user / assistant → tool-call
+  lines, timestamps, stop reasons, usage; tool arguments deliberately
+  omitted). Press `c` in the task browser (`/tasks` / `ctrl+shift+t`) for a
+  conversation view, or Read the file directly.
+- **`/steer <taskId> <message>`** — injects a message into a running subagent
+  (swarm session or background task; Tab-completed task ids). The agent loop
+  delivers it once the current tool call completes — no cancel/restart needed.
+- **Safe boundaries** — cancelling a single parked run (AbortSignal) unwinds
+  only that wait, never the gate; background tasks (`run_background`) are not
+  frozen (their tool calls bypass the harness gate) but do get transcripts and
+  steering.
+- **Theme-colored overlay** — icon/headline/body/hints render with the active
+  theme's `accent`/`text`/`muted`/`dim`; the terminal background is the
+  backdrop. Block glyphs (█ / ⏸) are measured single-width, so the pause
+  symbol centers exactly with the text below.
 
 ### Goal
 - **Lifecycle** — active / paused / blocked / complete / usage_limited / budget_limited
@@ -166,6 +193,8 @@ tools are model-callable, all commands are slash commands with Tab completion.
 | Command | Description |
 |---------|-------------|
 | `/swarm on\|off` | Toggle swarm mode |
+| `/pause` | Freeze all agents at the next safe boundary (esc/enter/space/ctrl+c resumes) |
+| `/steer <taskId> <message>` | Send a message to a running subagent |
 | `/cancel` | Cancel current work (two-step confirm) |
 | `/resume` | Resume an interrupted swarm |
 | `/tasks` | Task browser (`ctrl+shift+t`) |
@@ -206,7 +235,7 @@ Against the [Kimi Code CLI docs — Agents & Subagents](https://www.kimi.com/cod
 | Nested subagents (coder spawning more) | ❌ | Deliberately closed — no recursive dispatch; subagent toolset excludes agent/agent_swarm |
 | Permission inheritance | ✅ | Worker tool calls pass through the shared policy chain; /mode propagates by construction; asks degrade to blocks |
 | Instruction-file hierarchy | ✅ | Project `AGENTS.md` / `.kimi-code/AGENTS.md` → `$KIMI_CODE_HOME/AGENTS.md` → `~/.agents/AGENTS.md` |
-| wire.jsonl session persistence | ❌ | Subagents use SessionManager.inMemory() (in-process lifecycle) |
+| wire.jsonl session persistence | ⚠️ | Per-subagent transcripts (`agents/<id>/wire.jsonl`, user/assistant/tool-call, no tool args) + conversation viewer; full session resume pending pi-coding-agent API |
 | Hooks (`[[hooks]]` lifecycle) | ✅ | All 16 events, exit-code/stdout-JSON block semantics, fail-open |
 | Agent Skills (four scopes) | ✅+ | Kimi's four covered and extended to seven pi-native scopes; directory + flat forms; subagent + main-session channels |
 
@@ -232,6 +261,7 @@ pi-muselinn-harness/
 │   ├── goal/              Goal module (state machine, budgets, queue, persistence)
 │   ├── plan/              Plan module (tool whitelist, path guard, injection)
 │   ├── permission/        Permission module (18-level chain, approval contract)
+│   ├── pause/             pause gate + full-screen overlay layout (pure, theme-injectable)
 │   ├── hooks/             Hooks module (TOML mini-parser, executor, 16 events)
 │   ├── skills/            Skills module (frontmatter, seven-scope scanner)
 │   ├── swarm/             pure swarm half
@@ -247,6 +277,7 @@ pi-muselinn-harness/
 │   └── tui/               box/config/parse/switch/timing (pure chrome parts)
 ├── swarm/                 adapter: subagent execution, /swarm commands,
 │                          SwarmWidgetComponent, three-pane task browser
+├── pause/                 adapter: /pause overlay component, /steer command
 ├── task/                  adapter: background task manager (session spawn)
 ├── tui/                   adapter: MuselinnEditor + event wiring
 ├── ask/                   adapter: question dialog + ask_user_question tool
@@ -258,7 +289,7 @@ pi-muselinn-harness/
 
 ## Tests
 
-Pure node-level unit tests, no model quota needed (23 suites, 660+ assertions):
+Pure node-level unit tests, no model quota needed (27 suites, 800+ assertions):
 
 ```bash
 npm test                                        # all suites (node tests/run-all.mjs)
@@ -281,6 +312,9 @@ node tests/agent-file.test.mjs                   # agent file discovery/parse �
 node tests/agent-lifecycle.test.mjs               # agent lifecycle events — 6
 node tests/ask.test.mjs                           # ask spec/dialog/answers/approval titles — 123
 node tests/tool-policy.test.mjs                  # tool policy gate — 13
+node tests/pause-gate.test.mjs                    # pause gate + full-screen render — 55
+node tests/transcript.test.mjs                     # transcript wire.jsonl recording — 26
+node tests/steering.test.mjs                       # steering queue drain — 8
 node tests/todo.test.mjs                          # todo model + folding strategy — 21
 node tests/shell-output.test.mjs                  # output sanitizer — 21
 node tests/shimmer.test.mjs                     # shimmer sweep engine — 10
@@ -302,7 +336,7 @@ node 24/26 — on every push and PR.
 - **i18n** — bilingual harness UI text and notifications (docs are already split en/zh-CN; the project page has an EN/中 toggle)
 - **Math renderer graduation** — merge `feature/math-renderer` once compaction-path context safety is confirmed
 - **Clustered diff preview** — kimi-style ±3-line clustered diffs in edit/write approval messages (deferred from the P1 batch)
-- **True fullscreen** — container-swap fullscreen (kimi tasks-browser pattern); no alt-screen, preserving terminal scrollback
+- **True fullscreen** — the pause overlay already covers the whole terminal (shipped in 0.9.19); container-swap fullscreen for the task browser (kimi tasks-browser pattern) is still open — no alt-screen, preserving terminal scrollback
 
 ## Dependencies
 

@@ -41,6 +41,10 @@ export interface SubAgentTask {
   /** Timestamp when task completed (ms) — drives fill animation */
   completedAtMs?: number;
   error?: string;
+  /** In-memory transcript lines (capped) for the conversation viewer — optional for old persisted snapshots */
+  transcriptLines?: string[];
+  /** On-disk wire.jsonl path, set when a session dir is available */
+  transcriptPath?: string;
 }
 
 export interface SwarmState {
@@ -119,7 +123,7 @@ import { ProgressEstimator } from "./estimator.ts";
 // keeps every importer looking at the same live values.
 export interface SwarmGlobalState {
   currentSwarm: SwarmState | null;
-  activeSessions: Map<string, { session: { abort(): Promise<void>; dispose(): void }; taskId: string }> | null;
+  activeSessions: Map<string, { session: { abort(): Promise<void>; dispose(): void; steer(message: string): Promise<void> }; taskId: string }> | null;
   cancelPending: boolean;
   cancelTimer: ReturnType<typeof setTimeout> | null;
   savedSwarmState: SavedSwarm | null;

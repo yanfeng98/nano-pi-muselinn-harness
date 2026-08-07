@@ -56,7 +56,14 @@ import { registerFetchUrl } from "./webfetch/index";
 import { phasesToMarkdown, markdownToPhases, applyOp, TodoPhase, TodoItem } from "./packages/core/todo/types";
 import { loadPlugins, injectPluginSessionStart, registerPluginCommand, getPluginSkillFiles } from "./plugin/index";
 import { registerTui, setTuiBadgeProvider } from "./tui/index";
+import { agentPauseGate } from "./packages/core/pause/gate";
+import { registerPauseCommands } from "./pause/commands";
+import { setBackgroundSessionDir } from "./task";
 import shared from "./state";
+
+// Session dir captured at session_start — transcript wire.jsonl 落盘根目录.
+// Falls back to tmp when no sessionManager is available (RPC/print mode).
+let mainSessionDir = path.join(os.tmpdir(), "pi-muselinn-harness");
 
 // 0.29.0 feature imports
 import { agentFileService, findProjectRoot } from "./packages/core/agent-file/index.ts";
@@ -264,6 +271,8 @@ export default function (pi: ExtensionAPI) {
     try { injectPluginSessionStart(pi); } catch { /* ok */ }
     // Set plan session directory (for plan file storage)
     try { planManager.setSessionDir(ctx.sessionManager.getSessionDir()); } catch { /* ok */ }
+    // Capture session dir for subagent transcript 落盘 (swarm + background)
+    try { mainSessionDir = ctx.sessionManager.getSessionDir(); setBackgroundSessionDir(mainSessionDir); } catch { /* fallback tmp */ }
 
     // Refresh model catalog once at startup (Pi 0.80.8 async refresh).
     // Fire-and-forget: this handler runs inside init()'s awaited session_start
@@ -570,6 +579,11 @@ export default function (pi: ExtensionAPI) {
 
   // ── tool_call: 18-level policy chain + plan mode restrictions ──
   pi.on("tool_call", async (event, ctx) => {
+    // Pause gate: freeze the main agent at its next safe boundary. The
+    // tool_call event carries no AbortSignal (pi types.ts:850-897), so a
+    // cancel requested while paused waits for release — the release key is
+    // always available, no deadlock.
+    await agentPauseGate.waitUntilResumed(undefined, "tool_call");
     const toolName = event.toolName || "";
     const input = (event.input || event.args || {}) as Record<string, unknown>;
 
@@ -1126,7 +1140,7 @@ export default function (pi: ExtensionAPI) {
           const combinedSignal = AbortSignal.any?.(
             [signal, swarmState.globalAbortController?.signal].filter(Boolean) as AbortSignal[],
           ) ?? signal;
-          await runSubAgent(task, ctx, combinedSignal, updateProgress, agentProfile);
+          await runSubAgent(task, { ...ctx, sessionDir: mainSessionDir }, combinedSignal, updateProgress, agentProfile);
         }, { initialBatch: Math.min(5, maxC), spacingMs: 700 });
       } finally {
         // Clean up global abort controller
@@ -1409,7 +1423,7 @@ export default function (pi: ExtensionAPI) {
       const update = () => updateWidget();
 
       try {
-        await runSubAgent(task, ctx, signal, update, agentProfile);
+        await runSubAgent(task, { ...ctx, sessionDir: mainSessionDir }, signal, update, agentProfile);
       } finally {
         // Clean up refresh timer
         if (refreshTimer) {
@@ -1473,6 +1487,8 @@ export default function (pi: ExtensionAPI) {
   // Commands
   // ============================================================
   registerCommands(pi);
+  // ── Pause / steer commands (freeze + runtime message injection) ──
+  registerPauseCommands(pi);
 
   // ── TUI: boxed/compact editor chrome + /tui ──
   try { registerTui(pi); } catch { /* TUI chrome must never break extension load */ }

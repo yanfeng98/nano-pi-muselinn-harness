@@ -16,6 +16,7 @@ export interface ToolGateVerdict {
 export type ToolGate = (
   toolName: string,
   params: Record<string, unknown>,
+  signal?: AbortSignal,
 ) => Promise<ToolGateVerdict | undefined>;
 
 /**
@@ -28,7 +29,7 @@ export function wrapWithPermissionGate(tool: any, gate: ToolGate): any {
     ...tool,
     execute: async (toolCallId: string, params: any, signal?: AbortSignal, onUpdate?: (r: any) => void) => {
       try {
-        const verdict = await gate(String(tool.name ?? ""), params ?? {});
+        const verdict = await gate(String(tool.name ?? ""), params ?? {}, signal);
         if (verdict?.block) {
           return {
             content: [{ type: "text", text: `Blocked by permission policy: ${verdict.reason}` }],

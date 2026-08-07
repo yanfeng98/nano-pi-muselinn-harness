@@ -25,6 +25,13 @@ import { toolPolicyService } from "../packages/core/tool-policy/index.ts";
 import { getProfile } from "../packages/core/profile/profiles.ts";
 import { buildProfileTools, getProfilePrompt } from "../packages/core/profile/tool-builder.ts";
 import { agentLifecycle } from "../packages/core/agent-lifecycle/index.ts";
+import { agentPauseGate } from "../packages/core/pause/gate.ts";
+import {
+  appendTranscriptLine,
+  transcriptEventToLine,
+  transcriptPathFor,
+} from "../packages/core/swarm/transcript.ts";
+import { promptWithSteering } from "../packages/core/swarm/steering.ts";
 
 // Append one output line with a hard array-length cap (oldest dropped first).
 function pushOutputLine(task: SubAgentTask, line: string): void {
@@ -259,6 +266,8 @@ export async function runSubAgent(
     cwd: string;
     getSystemPrompt?: () => string | undefined;
     modelRegistry: { getAvailable(): Array<{ id: string }>; runtime?: any };
+    /** Session dir for transcript wire.jsonl 落盘 (agents/<taskId>/wire.jsonl) */
+    sessionDir?: string;
   },
   signal: AbortSignal,
   onProgress: () => void,
@@ -286,7 +295,14 @@ export async function runSubAgent(
   const profile = getProfile(profileName);
   const baseTools = profile ? buildProfileTools(profile, ctx.cwd) : [];
   const gatedTools = baseTools.map((t: any) =>
-    wrapWithPermissionGate(t, (name, params) => permissionManager.evaluateForSubagent(name, params as Record<string, unknown>, ctx.cwd)),
+    wrapWithPermissionGate(t, async (name, params, signal) => {
+      // Pause gate: freeze at the next safe boundary. Passing the run's
+      // AbortSignal means a cancel during a pause releases only this wait
+      // (gate stays engaged) — a cancelled subagent unwinds instead of
+      // parking forever behind a pause the operator may never release.
+      await agentPauseGate.waitUntilResumed(signal, "tool_call");
+      return permissionManager.evaluateForSubagent(name, params as Record<string, unknown>, ctx.cwd);
+    }),
   );
 
   // Parse provider:modelId or just modelId
@@ -323,7 +339,7 @@ export async function runSubAgent(
 async function runWithModel(
   model: any,
   task: SubAgentTask,
-  ctx: { cwd: string; getSystemPrompt?: () => string | undefined; modelRegistry: any },
+  ctx: { cwd: string; getSystemPrompt?: () => string | undefined; modelRegistry: any; sessionDir?: string },
   resourceLoader: any,
   tools: any[],
   signal: AbortSignal,
@@ -359,6 +375,10 @@ async function runWithModel(
     };
     if (combinedSignal.aborted) onCombinedAbort();
     else combinedSignal.addEventListener("abort", onCombinedAbort, { once: true });
+
+    if (ctx.sessionDir) {
+      task.transcriptPath = transcriptPathFor(ctx.sessionDir, task.id);
+    }
 
     const result = await createAgentSession({
       sessionManager: SessionManager.inMemory(),
@@ -423,6 +443,12 @@ async function runWithModel(
         }
         onProgress();
       }
+      const tl = transcriptEventToLine(event);
+      if (tl && task.transcriptPath) {
+        appendTranscriptLine(task.transcriptPath, tl);
+        (task.transcriptLines ??= []).push(tl);
+        if (task.transcriptLines.length > 5000) task.transcriptLines.splice(0, task.transcriptLines.length - 5000);
+      }
     });
 
     // Link parent abort signal → child session
@@ -437,7 +463,7 @@ async function runWithModel(
 
     try {
       await retryOnRateLimit(() =>
-        session.prompt(task.task, { source: "extension" }),
+        promptWithSteering(session, task.task, { source: "extension" }),
       );
     } catch (promptErr: any) {
       const wasAborted =

@@ -27,8 +27,21 @@ import * as path from "node:path";
 import { loadSkillsForCwd } from "../packages/core/skills/index";
 import { getProfile } from "../packages/core/profile/profiles.ts";
 import { getProfilePrompt } from "../packages/core/profile/tool-builder.ts";
+import {
+  appendTranscriptLine,
+  transcriptEventToLine,
+  transcriptPathFor,
+} from "../packages/core/swarm/transcript";
+import { promptWithSteering } from "../packages/core/swarm/steering";
 
 export type { BackgroundTaskEntry } from "../packages/core/task/state";
+
+// Session dir captured by index.ts session_start — background task
+// transcripts land at <dir>/agents/<taskId>/wire.jsonl. Empty = 不落盘.
+let backgroundSessionDir = "";
+export function setBackgroundSessionDir(dir: string): void {
+  backgroundSessionDir = dir;
+}
 
 // ============================================================
 // BackgroundTaskManager — singleton
@@ -59,6 +72,18 @@ class BackgroundTaskManager {
   /** Store session handle for a running task */
   setSession(taskId: string, session: any, unsubscribe: () => void): void {
     this.sessions.set(taskId, { session, unsubscribe });
+  }
+
+  /** Inject a steering message into a running task's session queue. */
+  steer(taskId: string, message: string): { ok: boolean; error?: string } {
+    const entry = this.sessions.get(taskId);
+    if (!entry) return { ok: false, error: `Task ${taskId} is not running` };
+    try {
+      void entry.session.steer(message);
+      return { ok: true };
+    } catch (e: any) {
+      return { ok: false, error: e?.message || String(e) };
+    }
   }
 
   /** Get a task by ID */
@@ -333,7 +358,7 @@ export function registerBackgroundTools(pi: any): void {
       });
 
       // Run in background (not awaited)
-      runBackgroundSession(taskId, model, params.prompt, tools, resourceLoader, signal, params.output_path);
+      runBackgroundSession(taskId, model, params.prompt, tools, resourceLoader, signal, params.output_path, backgroundSessionDir);
 
       return {
         content: [{ type: "text", text: `Background task started. ID: ${taskId}\nUse task_list to check status, task_output(id) to see results.` }],
@@ -430,6 +455,7 @@ async function runBackgroundSession(
   resourceLoader: any,
   signal: AbortSignal,
   outputPath?: string,
+  sessionDir?: string,
 ): Promise<void> {
   let session: any = null;
   let unsub: (() => void) | null = null;
@@ -459,6 +485,11 @@ async function runBackgroundSession(
           backgroundManager.appendOutput(taskId, texts.map((p: any) => p.text || ""));
         }
       }
+      // Transcript 落盘 (bg tasks: disk only, no in-memory lines)
+      if (sessionDir) {
+        const tl = transcriptEventToLine(event);
+        if (tl) appendTranscriptLine(transcriptPathFor(sessionDir, taskId), tl);
+      }
     });
     backgroundManager.setSession(taskId, session, unsub);
 
@@ -475,7 +506,7 @@ async function runBackgroundSession(
       };
     }
 
-    await session.prompt(prompt, { source: "extension" });
+    await promptWithSteering(session, prompt, { source: "extension" });
 
     // The 30-min timer fires via session.abort(), which may resolve (not
     // reject) prompt() — check the flag on the success path too.

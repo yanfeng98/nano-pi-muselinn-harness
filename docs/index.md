@@ -51,6 +51,11 @@ title: pi-muselinn-harness
       <p data-l="en">Kimi-style closed box (<code>╭─╮ │ ╰─╯</code>) with spinner and working state in the top border, three styles, hot-switch with <code>/tui</code>, and a render timing probe.</p>
       <p data-l="zh">Kimi 式闭合框(<code>╭─╮ │ ╰─╯</code>),上边框嵌入 spinner 与工作状态,三种样式,<code>/tui</code> 热切换,内置渲染耗时探针。</p>
     </section>
+    <section class="split-section" data-scene="pause">
+      <h3><span data-l="en">❚❚ <em>Pause</em> — freeze, inspect, steer</span><span data-l="zh">❚❚ <em>Pause</em> — 冻结、检视、转向</span></h3>
+      <p data-l="en"><code>/pause</code> freezes the main agent and every subagent at their next safe boundary — in-flight calls finish, nothing is aborted — behind a full-screen, theme-colored overlay with a live timer. Every subagent's conversation is recorded to <code>wire.jsonl</code> (view it with <code>c</code> in the task browser), and <code>/steer &lt;taskId&gt; &lt;msg&gt;</code> redirects a running subagent mid-flight.</p>
+      <p data-l="zh"><code>/pause</code> 在主代理与所有子代理的下一个安全边界冻结一切——进行中的调用跑完,什么都不中止——全屏主题色遮罩 + 实时计时。每个子代理的对话都落盘为 <code>wire.jsonl</code>（任务浏览器按 <code>c</code> 查看）; <code>/steer &lt;taskId&gt; &lt;msg&gt;</code> 可在运行中转向子代理。</p>
+    </section>
   </div>
 </div>
 
@@ -75,6 +80,7 @@ pi install npm:pi-muselinn-harness
 /goal Refactor the auth module           # budget-tracked goal
 /todo init "Phase 1: scanner"            # phased task plan
 /plan                                    # read-only plan mode
+/pause                                   # freeze; esc/enter/space/ctrl+c resumes
 /tui style plain|boxed|compact           # switch editor chrome
 ```
 </div>
@@ -88,21 +94,27 @@ pi install npm:pi-muselinn-harness
 </div>
 </div>
 
-<h2><span data-l="en">New in 0.9.18</span><span data-l="zh">0.9.18 新功能</span></h2>
+<h2><span data-l="en">New in 0.9.19</span><span data-l="zh">0.9.19 新功能</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
-### <span data-l="en">Persistent startup permission mode</span><span data-l="zh">可持久化的启动权限模式</span>
-<span data-l="en">Set <code>"defaultMode": "auto" | "yolo" | "manual"</code> in <code>permissions.json</code> (global <code>~/.pi/agent/</code> or project <code>.pi/</code>, global wins on conflict) and every fresh session starts there — no more interactive <code>/mode</code> on each new session. Sessions with a recorded <code>/mode</code> history still restore the last used mode; <code>defaultMode</code> is the starting point for fresh sessions. Thanks @jason-in-hub for the contribution!</span><span data-l="zh">在 <code>permissions.json</code>（全局 <code>~/.pi/agent/</code> 或项目 <code>.pi/</code>，冲突时全局优先）写入 <code>"defaultMode": "auto" | "yolo" | "manual"</code>，每个新会话都从该模式开始——不再需要每次手动 <code>/mode</code>。记录过 <code>/mode</code> 历史的会话仍恢复上次使用的模式；<code>defaultMode</code> 是新会话的起点。感谢 @jason-in-hub 的贡献！</span>
+### <span data-l="en">Freeze & steer — /pause · transcript · /steer</span><span data-l="zh">冻结与转向 — /pause · transcript · /steer</span>
+<span data-l="en"><code>/pause</code> parks the main agent and every swarm subagent at their next safe boundary (tool-call gate): in-flight calls finish, nothing is aborted, release continues exactly where each loop parked — behind a full-screen overlay with a theme-colored pause glyph and a live hold timer (esc/enter/space/ctrl+c). Every subagent's conversation is recorded to <code>&lt;sessionDir&gt;/agents/&lt;id&gt;/wire.jsonl</code> (no tool arguments), viewable with <code>c</code> in the task browser. <code>/steer &lt;taskId&gt; &lt;message&gt;</code> injects a message into a running subagent (swarm session or background task); the loop delivers it after the current tool call. Releasing leaves a status line in the session transcript.</span><span data-l="zh"><code>/pause</code> 把主代理与所有 swarm 子代理停在下一次安全边界（工具门卫）：进行中的调用跑完、什么都不中止、释放后从挂起点继续——全屏遮罩,主题色暂停符号 + 实时计时（esc/enter/space/ctrl+c）。每个子代理的对话落盘 <code>&lt;sessionDir&gt;/agents/&lt;id&gt;/wire.jsonl</code>（不落工具参数）,任务浏览器按 <code>c</code> 查看。<code>/steer &lt;taskId&gt; &lt;message&gt;</code> 向运行中的子代理注入消息（swarm 会话或后台任务）,循环在当前工具调用后投递。释放时在会话流中留下状态行。</span>
 </div>
 </div>
 <h2><span data-l="en">Previously</span><span data-l="zh">历史版本</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">0.9.18 — Persistent startup permission mode</span><span data-l="zh">0.9.18 — 可持久化的启动权限模式</span>
+<span data-l="en">Set <code>"defaultMode": "auto" | "yolo" | "manual"</code> in <code>permissions.json</code> (global <code>~/.pi/agent/</code> or project <code>.pi/</code>, global wins on conflict) and every fresh session starts there — no more interactive <code>/mode</code> on each new session. Sessions with a recorded <code>/mode</code> history still restore the last used mode; <code>defaultMode</code> is the starting point for fresh sessions. Thanks @jason-in-hub for the contribution!</span><span data-l="zh">在 <code>permissions.json</code>（全局 <code>~/.pi/agent/</code> 或项目 <code>.pi/</code>，冲突时全局优先）写入 <code>"defaultMode": "auto" | "yolo" | "manual"</code>，每个新会话都从该模式开始——不再需要每次手动 <code>/mode</code>。记录过 <code>/mode</code> 历史的会话仍恢复上次使用的模式；<code>defaultMode</code> 是新会话的起始点。感谢 @jason-in-hub 的贡献！</span>
+</div>
+</div>
 
 <p><span data-l="en">All earlier release notes live on the</span><span data-l="zh">更早的版本记录全部位于</span> <a href="changelog.html"><span data-l="en">changelog page</span><span data-l="zh">更新日志页</span></a> <span data-l="en">— generated from CHANGELOG.md, so it always matches the latest release.</span><span data-l="zh">— 由 CHANGELOG.md 自动生成,与最新发布始终保持一致。</span></p>
 
 <h2><span data-l="en">Commands</span><span data-l="zh">命令</span></h2>
 
 ```
-/swarm on|off        /cancel      /resume       /tasks (ctrl+shift+t)
+/swarm on|off        /pause         /steer <taskId> <msg>   /cancel      /resume       /tasks (ctrl+shift+t)
 /goal <objective>    /goal pause|resume|cancel|replace|budget|queue
 /todo                /plan [on|off|clear] /mode        /tui style plain|boxed|compact
 ```
