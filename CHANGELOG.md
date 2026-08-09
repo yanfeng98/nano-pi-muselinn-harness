@@ -2,7 +2,7 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
-## Unreleased
+## 0.9.21
 
 **Window-aware tool-result spill (issue #2):**
 
