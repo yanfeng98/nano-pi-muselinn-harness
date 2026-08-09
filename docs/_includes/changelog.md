@@ -2,6 +2,40 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
+## Unreleased
+
+**Window-aware tool-result spill (issue #2):**
+
+- The 40k-char spill threshold was hardcoded and unaware of the model's
+  context window — a 1M-context model was forced through the same disk
+  spill + `read` round-trip as an 8k one. The threshold now scales with
+  `ctx.model.contextWindow` (`max(40k, window × 4 chars/token)`, capped at
+  800k chars ≈ 200k tokens so a single tool result can never balloon the
+  context), and `PI_TRUNCATION_THRESHOLD` overrides it explicitly. Small
+  windows keep the exact previous behavior.
+
+**RPC approval dialog (issue #4) — no more silent denials in RPC hosts:**
+
+- In pi RPC mode (obsidian-pi & other embedding clients) the approval dialog
+  previously rendered through the TUI-only `ctx.ui.custom` path, which RPC
+  hosts don't implement: every `ask` verdict in manual mode silently
+  returned `User denied: <policy>` and the user never saw a prompt. The
+  approval dialog now detects non-TUI hosts (`ctx.mode !== "tui"`) and
+  falls back to the extension UI protocol that RPC hosts do implement —
+  `select` (Allow once / Always allow / Deny / Deny with reason) with
+  `input` for the deny reason and `confirm` as a last resort. Cancelling
+  the reason input returns to the options (TUI parity); any host-side UI
+  failure degrades to a fail-safe deny.
+
+## 0.9.20
+
+**Hotfix — npm package was missing the `pause/` adapter directory (issue #3):**
+
+- The `files` whitelist in package.json did not include `pause/`, so the
+  0.9.19 tarball shipped without `pause/commands.ts` and the extension
+  failed to load (`Cannot find module './pause/commands'`). The directory
+  is now part of the published package.
+
 ## 0.9.19
 
 **Freeze & steer — `/pause` · transcript · `/steer`:**

@@ -100,7 +100,7 @@ pi                                      # 重启 pi，然后试试：
 - **Destructive 检测** — `rm -rf` / `git push --force` / `drop table` / `git reset --hard` 等正则识别，每次必问，不被会话批准短路
 - **敏感文件守卫** — `.env` / `id_rsa` / `*.key` 等读写拦截，auto 模式下也不放行
 - **会话批准指纹** — 按 sessionId + 输入指纹记忆批准，不蜕变为"永久许可"
-- **审批面板** — 编号对话框，按工具定制动作标题，数字键 1-9 直选，四种结果：Allow once / Always allow（本会话）/ Deny / Deny with reason（理由回传给模型）
+- **审批面板** — 编号对话框，按工具定制动作标题，数字键 1-9 直选，四种结果：Allow once / Always allow（本会话）/ Deny / Deny with reason（理由回传给模型）。在 RPC 宿主（obsidian-pi 等）中，同样的四个选择走扩展 UI 协议（`select` / `input` / `confirm`）呈现，不再静默拒绝
 - **子代理门控** — swarm worker 的工具调用经过同一策略链（进程内共享管理器）：`/mode` 切换天然传播到进行中的子代理，ask 判定降级为阻断（绝不静默放行）
 - **AGENTS.md 指令** — 项目级（最近的 `AGENTS.md` 或 `.kimi-code/AGENTS.md`）→ 全局 `$KIMI_CODE_HOME/AGENTS.md` → 跨工具 `~/.agents/AGENTS.md`，聚合生效；`destructive-ask-always` 可将 ask 升级为 deny
 - **配置缓存** — 权限配置按文件 mtime 缓存，变更即时生效
@@ -142,7 +142,7 @@ pi                                      # 重启 pi，然后试试：
 - **`ask_user_question` 工具** — agent 一次发起 1-4 个结构化提问，共用一个标签页对话框：短标签页（`1/3 · header`，←/→/Tab 切换）、编号选项可带描述次行、`multi_select` 复选（空格切换、Enter 确认）、每题自动附带自由文本 **Other** 选项；数字键 1-9 直选，方向键/jk 导航，Esc 取消
 - **默认健壮** — 超长选项列表在有界窗口内滚动，重复答案自动去重，后台任务也能发起提问而不卡死 UI
 - **预览、备注、Chat 行** — 选项可携带 Markdown **预览**（宽终端双栏并排，窄终端堆叠）；`n` 键给选项附加**备注**；**Chat about this** 行以 `chat` 结果结束对话框，让用户先讨论再回答
-- **共享对话框组件** — 权限审批复用同一组件（单选、无 Other）；print/RPC 无 UI 模式下退化为文本提问，不阻塞
+- **共享对话框组件** — 权限审批复用同一组件（单选、无 Other）；print 模式下退化为文本提问，不阻塞；RPC 模式下权限审批回退到 `select`/`confirm`/`input`
 - **结果回传** — 按题回传答案（多选为数组）；跳过的题与 Esc 取消区分上报
 - **auto 模式安全** — auto 模式下 `ask_user_question` 被策略专门拒绝（防无人值守卡死）
 
@@ -166,7 +166,8 @@ pi                                      # 重启 pi，然后试试：
 - **发现机制** — 项目 `.pi/plugins/*/` 优先于用户 `~/.pi/agent/plugins/*/`，同名先到先得；`/plugins` 查看能力与诊断
 
 ### 输出截断
-- **超大工具结果落盘** — 超过 40k 字符的结果写入 `<sessionDir>/tool-results/`，上下文中只保留净化后的头尾预览 + `output_path`，附 read 分页说明（对齐 Kimi `toolResultTruncation`）
+- **超大工具结果落盘** — 超过截断阈值的结果写入 `<sessionDir>/tool-results/`，上下文中只保留净化后的头尾预览 + `output_path`，附 read 分页说明（对齐 Kimi `toolResultTruncation`）
+- **窗口感知阈值** — 阈值随当前模型上下文窗口缩放（`max(40k, 窗口 × 4 字符/token)`，上限 800k 字符 ≈ 200k token），1M 上下文的模型可保留远多输出；`PI_TRUNCATION_THRESHOLD` 可显式覆盖
 
 ## 命令
 
@@ -298,7 +299,8 @@ node tests/steering.test.mjs                       # steering 队列 drain — 8
 node tests/todo.test.mjs                          # todo 模型 + 折叠策略 21 项
 node tests/shell-output.test.mjs                  # 输出净化器 21 项
 node tests/shimmer.test.mjs                     # shimmer 扫描动画引擎 — 10
-node tests/truncation.test.mjs                    # 结果落盘截断 13 项
+node tests/truncation.test.mjs                    # 结果落盘截断 + 窗口感知阈值 21 项
+node tests/approval-rpc.test.mjs                  # RPC 审批兜底（select/confirm）21 项
 node tests/resume-guard.test.mjs                  # swarm resume 守卫 6 项
 node tests/webfetch.test.mjs                      # web 内容提取 12 项
 node tests/plugin.test.mjs                        # 插件 manifest/发现 17 项

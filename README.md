@@ -120,7 +120,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Destructive detection** — `rm -rf` / `git push --force` / `drop table` / `git reset --hard` regex recognition, always asks, never short-circuited by session approvals
 - **Sensitive-file guard** — `.env` / `id_rsa` / `*.key` read/write interception, even in auto mode
 - **Session approval fingerprints** — approvals remembered per sessionId + input fingerprint, never degrading into "permanent allow"
-- **Approval panel** — numbered dialog with per-tool action titles ("Run this command?" / "Apply these edits?"), digit-key direct select, four outcomes: Allow once / Always allow (session) / Deny / Deny with reason (reason relayed to the model)
+- **Approval panel** — numbered dialog with per-tool action titles ("Run this command?" / "Apply these edits?"), digit-key direct select, four outcomes: Allow once / Always allow (session) / Deny / Deny with reason (reason relayed to the model). In RPC hosts (obsidian-pi etc.) the same choices render over the extension UI protocol (`select` / `input` / `confirm`) instead of the TUI dialog — no more silent denials
 - **Subagent gating** — swarm worker tool calls run through the same policy chain (shared in-process manager): `/mode` switches propagate to in-flight subagents by construction, `ask` verdicts degrade to blocks (never silent approval)
 - **AGENTS.md hierarchy** — project (nearest `AGENTS.md` or `.kimi-code/AGENTS.md`) → global `$KIMI_CODE_HOME/AGENTS.md` → cross-tool `~/.agents/AGENTS.md`, aggregated; `destructive-ask-always` can upgrade ask to deny
 - **Config cache** — permission config cached by file mtime, edits take effect immediately
@@ -162,7 +162,7 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **`ask_user_question` tool** — the agent asks 1-4 structured questions in one tabbed dialog: per-question header tabs (`1/3 · header`, ←/→/Tab to switch), numbered options with description sub-lines, `multi_select` checkboxes (Space toggles, Enter confirms), and an automatic free-text **Other** option on every question; digit keys 1-9 jump straight to an option, arrows/jk navigate, Esc cancels
 - **Robust by default** — long option lists scroll inside a bounded window, duplicate answers are deduplicated, and questions can be posed from background tasks without wedging the UI
 - **Previews, notes, chat row** — options can carry Markdown **previews** (side-by-side pane on wide terminals, stacked below on narrow ones); attach a per-option **note** with `n`; a **Chat about this** row ends the dialog with a `chat` result so the user can discuss the question instead of answering it
-- **Shared dialog component** — the same component backs permission approval (single-select, no Other); in print/RPC mode the tool returns the questions as text instead of blocking
+- **Shared dialog component** — the same component backs permission approval (single-select, no Other); in print mode the tool returns the questions as text instead of blocking, and in RPC mode permission approvals fall back to `select`/`confirm`/`input`
 - **Answer reporting** — per-question answers (multi-select as an array); skipped questions and Esc-cancelled dialogs are reported distinctly
 - **Auto-mode safe** — auto mode denies `ask_user_question` by policy (no unattended hangs)
 
@@ -186,7 +186,8 @@ tools are model-callable, all commands are slash commands with Tab completion.
 - **Discovery** — project `.pi/plugins/*/` then user `~/.pi/agent/plugins/*/`, first-wins name dedupe; `/plugins` lists capabilities and diagnostics
 
 ### Output truncation
-- **Oversized tool results spill to disk** — results over 40k chars are written to `<sessionDir>/tool-results/` and replaced in context with a sanitized head+tail preview carrying the `output_path` and read-paging instructions (Kimi `toolResultTruncation` pattern)
+- **Oversized tool results spill to disk** — results over the spill threshold are written to `<sessionDir>/tool-results/` and replaced in context with a sanitized head+tail preview carrying the `output_path` and read-paging instructions (Kimi `toolResultTruncation` pattern)
+- **Window-aware threshold** — the threshold scales with the active model's context window (`max(40k, window × 4 chars/token)`, capped at 800k chars ≈ 200k tokens), so 1M-context models keep far more output in-context; `PI_TRUNCATION_THRESHOLD` overrides it explicitly
 
 ## Commands
 
@@ -318,7 +319,8 @@ node tests/steering.test.mjs                       # steering queue drain — 8
 node tests/todo.test.mjs                          # todo model + folding strategy — 21
 node tests/shell-output.test.mjs                  # output sanitizer — 21
 node tests/shimmer.test.mjs                     # shimmer sweep engine — 10
-node tests/truncation.test.mjs                    # tool-result spill — 13
+node tests/truncation.test.mjs                    # tool-result spill + window-aware threshold — 21
+node tests/approval-rpc.test.mjs                  # RPC approval fallback (select/confirm) — 21
 node tests/resume-guard.test.mjs                  # swarm resume validation — 6
 node tests/webfetch.test.mjs                      # web extraction — 12
 node tests/plugin.test.mjs                        # plugin manifest/discovery — 17
