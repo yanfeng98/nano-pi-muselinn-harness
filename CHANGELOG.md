@@ -29,7 +29,7 @@ All notable changes to pi-muselinn-harness, in reverse chronological order.
 
 ## 0.9.20
 
-**Hotfix — npm package was missing the `pause/` adapter directory:**
+**Hotfix — npm package was missing the `pause/` adapter directory (issue #3):**
 
 - The `files` whitelist in package.json did not include `pause/`, so the
   0.9.19 tarball shipped without `pause/commands.ts` and the extension
