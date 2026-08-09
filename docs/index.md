@@ -94,14 +94,28 @@ pi install npm:pi-muselinn-harness
 </div>
 </div>
 
-<h2><span data-l="en">New in 0.9.19</span><span data-l="zh">0.9.19 新功能</span></h2>
+<h2><span data-l="en">New in 0.9.21</span><span data-l="zh">0.9.21 新功能</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">RPC approvals &amp; window-aware truncation</span><span data-l="zh">RPC 审批与窗口感知截断</span>
+<span data-l="en">Approval dialogs now work in RPC hosts (obsidian-pi &amp; other embedding clients): the same Allow once / Always allow / Deny / Deny with reason choices render over the extension UI protocol (<code>select</code> / <code>input</code> / <code>confirm</code>) instead of silently denying every edit (<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/4">issue #4</a>). The tool-result spill threshold now scales with the model's context window (<code>max(40k, window × 4 chars/token)</code>, capped at 800k chars ≈ 200k tokens), with <code>PI_TRUNCATION_THRESHOLD</code> as an explicit override — 1M-context models keep far more output in-context (<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/2">issue #2</a>).</span><span data-l="zh">审批弹窗在 RPC 宿主（obsidian-pi 等嵌入客户端）中可用：允许一次 / 本会话始终允许 / 拒绝 / 拒绝并附原因，通过扩展 UI 协议（<code>select</code> / <code>input</code> / <code>confirm</code>）呈现，不再静默拒绝每次编辑（<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/4">issue #4</a>）。工具结果落盘阈值随模型上下文窗口缩放（<code>max(40k, 窗口 × 4 字符/token)</code>，上限 800k 字符 ≈ 200k token），可用 <code>PI_TRUNCATION_THRESHOLD</code> 显式覆盖——1M 上下文模型可保留远多输出（<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/2">issue #2</a>）。</span>
+</div>
+</div>
+<h2><span data-l="en">Previously — 0.9.20</span><span data-l="zh">历史版本 0.9.20</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Package hotfix — pause/ shipped</span><span data-l="zh">打包修复 — pause/ 随包发布</span>
+<span data-l="en">The published tarball was missing the <code>pause/</code> adapter directory and the extension failed to load (<code>Cannot find module './pause/commands'</code>); it is now part of the package (<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/3">issue #3</a>).</span><span data-l="zh">发布的 tarball 缺少 <code>pause/</code> 适配目录导致扩展加载失败（<code>Cannot find module './pause/commands'</code>）；现已纳入发布包（<a href="https://github.com/MuseLinn/pi-muselinn-harness/issues/3">issue #3</a>）。</span>
+</div>
+</div>
+<h2><span data-l="en">Previously — 0.9.19</span><span data-l="zh">历史版本 0.9.19</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
 ### <span data-l="en">Freeze & steer — /pause · transcript · /steer</span><span data-l="zh">冻结与转向 — /pause · transcript · /steer</span>
 <span data-l="en"><code>/pause</code> parks the main agent and every swarm subagent at their next safe boundary (tool-call gate): in-flight calls finish, nothing is aborted, release continues exactly where each loop parked — behind a full-screen overlay with a theme-colored pause glyph and a live hold timer (esc/enter/space/ctrl+c). Every subagent's conversation is recorded to <code>&lt;sessionDir&gt;/agents/&lt;id&gt;/wire.jsonl</code> (no tool arguments), viewable with <code>c</code> in the task browser. <code>/steer &lt;taskId&gt; &lt;message&gt;</code> injects a message into a running subagent (swarm session or background task); the loop delivers it after the current tool call. Releasing leaves a status line in the session transcript.</span><span data-l="zh"><code>/pause</code> 把主代理与所有 swarm 子代理停在下一次安全边界（工具门卫）：进行中的调用跑完、什么都不中止、释放后从挂起点继续——全屏遮罩,主题色暂停符号 + 实时计时（esc/enter/space/ctrl+c）。每个子代理的对话落盘 <code>&lt;sessionDir&gt;/agents/&lt;id&gt;/wire.jsonl</code>（不落工具参数）,任务浏览器按 <code>c</code> 查看。<code>/steer &lt;taskId&gt; &lt;message&gt;</code> 向运行中的子代理注入消息（swarm 会话或后台任务）,循环在当前工具调用后投递。释放时在会话流中留下状态行。</span>
 </div>
 </div>
-<h2><span data-l="en">Previously</span><span data-l="zh">历史版本</span></h2>
+<h2><span data-l="en">Previously — 0.9.18</span><span data-l="zh">历史版本 0.9.18</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
 ### <span data-l="en">0.9.18 — Persistent startup permission mode</span><span data-l="zh">0.9.18 — 可持久化的启动权限模式</span>
