@@ -50,7 +50,7 @@ import { cronManager, registerCronTools } from "./packages/core/task/cron";
 import { registerHooks, hookEngine } from "./packages/core/hooks/index";
 import { registerAskUserQuestion, showQuestionDialog } from "./ask/index";
 import { approvalTitleFor } from "./packages/core/ask/types";
-import { shouldTruncate, truncationPathFor, buildTruncatedPreview } from "./packages/core/truncation/index";
+import { shouldTruncate, truncationPathFor, buildTruncatedPreview, truncationThresholdFor } from "./packages/core/truncation/index";
 import { registerTodoList, registerTodoReminders, bindTodoSession, clearTodoSession, restoreTodos, rt, persist, refreshWidget, togglePanel, syncTodoAutoClearTimer } from "./todo/index";
 import { registerFetchUrl } from "./webfetch/index";
 import { phasesToMarkdown, markdownToPhases, applyOp, TodoPhase, TodoItem } from "./packages/core/todo/types";
@@ -517,8 +517,11 @@ export default function (pi: ExtensionAPI) {
       const content = event?.content;
       if (!Array.isArray(content)) return undefined;
       let changed = false;
+      // Window-aware spill threshold (issue #2): 1M-context models keep
+      // more tool output in-context instead of forcing a read round-trip.
+      const truncationThreshold = truncationThresholdFor(ctx?.model?.contextWindow);
       const out = content.map((part: any) => {
-        if (part?.type !== "text" || typeof part.text !== "string" || !shouldTruncate(part.text)) return part;
+        if (part?.type !== "text" || typeof part.text !== "string" || !shouldTruncate(part.text, truncationThreshold)) return part;
         let base: string;
         try { base = ctx?.sessionManager?.getSessionDir?.() || path.join(os.tmpdir(), "pi-muselinn-harness"); }
         catch { base = path.join(os.tmpdir(), "pi-muselinn-harness"); }

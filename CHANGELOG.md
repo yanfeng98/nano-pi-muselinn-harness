@@ -4,6 +4,16 @@ All notable changes to pi-muselinn-harness, in reverse chronological order.
 
 ## Unreleased
 
+**Window-aware tool-result spill (issue #2):**
+
+- The 40k-char spill threshold was hardcoded and unaware of the model's
+  context window — a 1M-context model was forced through the same disk
+  spill + `read` round-trip as an 8k one. The threshold now scales with
+  `ctx.model.contextWindow` (`max(40k, window × 4 chars/token)`, capped at
+  800k chars ≈ 200k tokens so a single tool result can never balloon the
+  context), and `PI_TRUNCATION_THRESHOLD` overrides it explicitly. Small
+  windows keep the exact previous behavior.
+
 **RPC approval dialog (issue #4) — no more silent denials in RPC hosts:**
 
 - In pi RPC mode (obsidian-pi & other embedding clients) the approval dialog

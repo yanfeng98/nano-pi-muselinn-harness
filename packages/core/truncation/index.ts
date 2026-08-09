@@ -14,10 +14,35 @@ export const TRUNCATION_THRESHOLD_CHARS = 40_000;
 /** Preview budget: first HEAD + last TAIL chars stay in the context. */
 export const TRUNCATION_HEAD_CHARS = 1_500;
 export const TRUNCATION_TAIL_CHARS = 500;
+/** Chars per token used to scale the threshold to the model's window. */
+const CHARS_PER_TOKEN = 4;
+/** Ceiling: one tool result must never balloon past ~200k tokens of text. */
+const TRUNCATION_THRESHOLD_MAX_CHARS = 800_000;
+/** Env override (chars, wins over everything): PI_TRUNCATION_THRESHOLD. */
+const TRUNCATION_THRESHOLD_ENV = "PI_TRUNCATION_THRESHOLD";
+
+/**
+ * Spill threshold for a model's context window (tokens). Small windows keep
+ * the 40k default; larger windows scale up to `window * CHARS_PER_TOKEN`,
+ * capped so a single tool result can never exceed ~200k tokens of text.
+ * `PI_TRUNCATION_THRESHOLD` overrides everything (issue #2: the 40k spill
+ * was cutting output 1M-context models can comfortably digest).
+ */
+export function truncationThresholdFor(contextWindowTokens?: number): number {
+  const env = Number(process.env[TRUNCATION_THRESHOLD_ENV]);
+  if (Number.isFinite(env) && env > 0) return env;
+  if (typeof contextWindowTokens === "number" && contextWindowTokens > 0) {
+    return Math.min(
+      Math.max(contextWindowTokens * CHARS_PER_TOKEN, TRUNCATION_THRESHOLD_CHARS),
+      TRUNCATION_THRESHOLD_MAX_CHARS,
+    );
+  }
+  return TRUNCATION_THRESHOLD_CHARS;
+}
 
 /** True when a text result exceeds the spill threshold. */
-export function shouldTruncate(text: string): boolean {
-  return typeof text === "string" && text.length > TRUNCATION_THRESHOLD_CHARS;
+export function shouldTruncate(text: string, threshold: number = TRUNCATION_THRESHOLD_CHARS): boolean {
+  return typeof text === "string" && text.length > threshold;
 }
 
 /** File path for a spilled result. */

@@ -3,6 +3,7 @@ const {
   shouldTruncate,
   truncationPathFor,
   buildTruncatedPreview,
+  truncationThresholdFor,
   TRUNCATION_THRESHOLD_CHARS,
   TRUNCATION_HEAD_CHARS,
   TRUNCATION_TAIL_CHARS,
@@ -19,6 +20,29 @@ check("small text not truncated", !shouldTruncate("hello"));
 check("exactly at threshold not truncated", !shouldTruncate("x".repeat(TRUNCATION_THRESHOLD_CHARS)));
 check("over threshold truncated", shouldTruncate("x".repeat(TRUNCATION_THRESHOLD_CHARS + 1)));
 check("non-string safe", !shouldTruncate(null) && !shouldTruncate(undefined) && !shouldTruncate(42));
+
+// 1b. truncationThresholdFor (issue #2: window-aware spill threshold)
+check("threshold: no window info → 40k default", truncationThresholdFor() === 40_000);
+check("threshold: small window (8k) floored at 40k", truncationThresholdFor(8_000) === 40_000);
+check("threshold: 100k window scales to 400k", truncationThresholdFor(100_000) === 400_000);
+check("threshold: 200k window hits the 800k cap", truncationThresholdFor(200_000) === 800_000);
+check("threshold: 1M window capped at 800k", truncationThresholdFor(1_000_000) === 800_000);
+{
+  const prev = process.env.PI_TRUNCATION_THRESHOLD;
+  process.env.PI_TRUNCATION_THRESHOLD = "12345";
+  check("threshold: env override wins over window", truncationThresholdFor(1_000_000) === 12_345);
+  process.env.PI_TRUNCATION_THRESHOLD = prev ?? "";
+  if (!prev) delete process.env.PI_TRUNCATION_THRESHOLD;
+}
+{
+  const prev = process.env.PI_TRUNCATION_THRESHOLD;
+  process.env.PI_TRUNCATION_THRESHOLD = "bogus";
+  check("threshold: invalid env ignored", truncationThresholdFor(1_000_000) === 800_000);
+  process.env.PI_TRUNCATION_THRESHOLD = prev ?? "";
+  if (!prev) delete process.env.PI_TRUNCATION_THRESHOLD;
+}
+// shouldTruncate honors an explicit threshold
+check("shouldTruncate honors explicit threshold", !shouldTruncate("x".repeat(100), 200) && shouldTruncate("x".repeat(201), 200));
 
 // 2. truncationPathFor
 check("path shape", truncationPathFor("/tmp/sess", "bash", "tc-1") === "/tmp/sess/tool-results/bash-tc-1.txt");
