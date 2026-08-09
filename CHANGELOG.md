@@ -2,6 +2,21 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
+## Unreleased
+
+**RPC approval dialog (issue #4) — no more silent denials in RPC hosts:**
+
+- In pi RPC mode (obsidian-pi & other embedding clients) the approval dialog
+  previously rendered through the TUI-only `ctx.ui.custom` path, which RPC
+  hosts don't implement: every `ask` verdict in manual mode silently
+  returned `User denied: <policy>` and the user never saw a prompt. The
+  approval dialog now detects non-TUI hosts (`ctx.mode !== "tui"`) and
+  falls back to the extension UI protocol that RPC hosts do implement —
+  `select` (Allow once / Always allow / Deny / Deny with reason) with
+  `input` for the deny reason and `confirm` as a last resort. Cancelling
+  the reason input returns to the options (TUI parity); any host-side UI
+  failure degrades to a fail-safe deny.
+
 ## 0.9.20
 
 **Hotfix — npm package was missing the `pause/` adapter directory:**

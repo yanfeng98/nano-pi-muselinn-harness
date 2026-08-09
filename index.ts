@@ -43,7 +43,7 @@ import { registerCommands } from "./swarm/commands";
 import { goalManager } from "./packages/core/goal";
 import type { PersistencePort } from "./packages/core/ports";
 import { planManager } from "./packages/core/plan";
-import { permissionManager } from "./packages/core/permission";
+import { permissionManager, approvalViaRpcUi } from "./packages/core/permission";
 import { registerPermissionCommands } from "./packages/core/permission/commands";
 import { backgroundManager, registerBackgroundTools } from "./task";
 import { cronManager, registerCronTools } from "./packages/core/task/cron";
@@ -229,7 +229,17 @@ export default function (pi: ExtensionAPI) {
   // parity); 'once' approves without recording; 'always' records for the
   // session (the old confirm's implicit behavior); deny optionally
   // carries a user reason back to the model.
+  //
+  // Non-TUI hosts (pi RPC mode: obsidian-pi & other embedding clients)
+  // have no working ctx.ui.custom — showQuestionDialog resolves undefined
+  // there and every `ask` verdict would be silently denied. Route those
+  // through the extension UI protocol primitives (select/input/confirm),
+  // which RPC hosts implement.
   permissionManager.setApprovalDialog(async (dialogCtx, toolName, title, message) => {
+    if (dialogCtx?.mode !== "tui") {
+      return approvalViaRpcUi(dialogCtx, toolName, `${approvalTitleFor(toolName)}\n${title}`, message);
+    }
+
     // Loop so Esc in the "Deny with reason" input returns to the options
     // (the same pattern the plan approval panel uses for its Revise input)
     // instead of ending the whole dialog with a bare deny.

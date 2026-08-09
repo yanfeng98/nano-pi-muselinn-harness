@@ -15,6 +15,8 @@ export interface ApprovalDialogResult {
   /** Optional user-supplied reason attached to a deny (relayed to the model). */
   reason?: string;
 }
+/** RPC/limited-UI approval dialog fallback (select/confirm/input). */
+export { approvalViaRpcUi, type ApprovalDialogCtx } from './approval-rpc.ts';
 /** Adapter-injected approval dialog: three-way ask outcome. */
 export type ApprovalDialogFn = (
   ctx: any,
