@@ -290,7 +290,7 @@ pi-muselinn-harness/
 
 ## Tests
 
-Pure node-level unit tests, no model quota needed (27 suites, 800+ assertions):
+Pure node-level unit tests, no model quota needed (28 suites, 830+ assertions):
 
 ```bash
 npm test                                        # all suites (node tests/run-all.mjs)
@@ -301,15 +301,16 @@ or individually:
 
 ```bash
 node tests/musepi-config.test.mjs                 # MusePi config compat — 9
-node tests/permission.test.mjs                    # Permission policy chain + subagent gate — 22
+node tests/permission.test.mjs                    # Permission policy chain + subagent gate — 26
 node tests/goal.test.mjs                          # Goal state machine + monotonic restore — 32
 node tests/plan.test.mjs                          # Plan mode round-trip + restore validation — 42
 node tests/task.test.mjs                          # Task restore/list/output/block + loader runtime — 16
 node tests/cron.test.mjs                          # Cron subsystem — 16
 node tests/hooks.test.mjs                         # Hooks engine — 43
 node tests/skills.test.mjs                        # Skills scan/parse/scopes/discover — 38
-node tests/tui.test.mjs                           # TUI collapse/keys/completions/spinner — 62
-node tests/tui-box.test.mjs                       # TUI box/config/probe/switch — 61
+node tests/tui.test.mjs                           # TUI collapse/keys/completions/spinner — 63
+node tests/tui-box.test.mjs                       # TUI box/config/probe/switch — 63
+node tests/tui-adapter.test.mjs                   # TUI adapter working-state render path — 4
 node tests/agent-file.test.mjs                   # agent file discovery/parse — 11
 node tests/agent-lifecycle.test.mjs               # agent lifecycle events — 6
 node tests/ask.test.mjs                           # ask spec/dialog/answers/approval titles — 123
@@ -317,7 +318,7 @@ node tests/tool-policy.test.mjs                  # tool policy gate — 13
 node tests/pause-gate.test.mjs                    # pause gate + full-screen render — 55
 node tests/transcript.test.mjs                     # transcript wire.jsonl recording — 26
 node tests/steering.test.mjs                       # steering queue drain — 8
-node tests/todo.test.mjs                          # todo model + folding strategy — 21
+node tests/todo.test.mjs                          # todo model + folding strategy — 99
 node tests/shell-output.test.mjs                  # output sanitizer — 21
 node tests/shimmer.test.mjs                     # shimmer sweep engine — 10
 node tests/truncation.test.mjs                    # tool-result spill + window-aware threshold — 21

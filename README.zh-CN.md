@@ -270,7 +270,7 @@ pi-muselinn-harness/
 
 ## 测试
 
-无需模型额度的 node 级单元测试（27 个套件，800+ 项断言）：
+无需模型额度的 node 级单元测试（28 个套件，830+ 项断言）：
 
 ```bash
 npm test                                        # 全部套件（node tests/run-all.mjs）
@@ -281,15 +281,16 @@ npm run typecheck                               # 全包 tsc 类型检查（stri
 
 ```bash
 node tests/musepi-config.test.mjs                 # MusePi 配置兼容 — 9
-node tests/permission.test.mjs                    # Permission 策略链 + 子代理门控 22 项
+node tests/permission.test.mjs                    # Permission 策略链 + 子代理门控 26 项
 node tests/goal.test.mjs                          # Goal 状态机 + 单调恢复 32 项
 node tests/plan.test.mjs                          # Plan 模式往返 + 恢复校验 42 项
 node tests/task.test.mjs                          # Task 恢复/列表/输出/阻塞 + loader runtime 16 项
 node tests/cron.test.mjs                          # Cron 子系统 16 项
 node tests/hooks.test.mjs                         # Hooks 引擎 43 项
 node tests/skills.test.mjs                        # Skills 扫描/解析/作用域/discover 38 项
-node tests/tui.test.mjs                           # TUI 折叠/键位/补全/spinner 62 项
-node tests/tui-box.test.mjs                       # TUI 闭合框/配置/探针/切换 61 项
+node tests/tui.test.mjs                           # TUI 折叠/键位/补全/spinner 63 项
+node tests/tui-box.test.mjs                       # TUI 闭合框/配置/探针/切换 63 项
+node tests/tui-adapter.test.mjs                   # TUI 适配器 working-state 渲染路径 4 项
 node tests/agent-file.test.mjs                   # agent 文件发现/解析 — 11
 node tests/agent-lifecycle.test.mjs               # agent 生命周期事件 — 6
 node tests/ask.test.mjs                           # ask 规格/对话框/答案/审批标题 123 项
@@ -297,7 +298,7 @@ node tests/tool-policy.test.mjs                  # 工具策略门控 — 13
 node tests/pause-gate.test.mjs                    # 暂停门禁 + 全屏渲染 — 55
 node tests/transcript.test.mjs                     # transcript wire.jsonl 落盘 — 26
 node tests/steering.test.mjs                       # steering 队列 drain — 8
-node tests/todo.test.mjs                          # todo 模型 + 折叠策略 21 项
+node tests/todo.test.mjs                          # todo 模型 + 折叠策略 99 项
 node tests/shell-output.test.mjs                  # 输出净化器 21 项
 node tests/shimmer.test.mjs                     # shimmer 扫描动画引擎 — 10
 node tests/truncation.test.mjs                    # 结果落盘截断 + 窗口感知阈值 21 项
