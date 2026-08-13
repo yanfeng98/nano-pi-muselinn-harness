@@ -21,10 +21,11 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      # devDependencies only: jiti (CJS-loader suites) + typescript
+      # devDependencies: jiti (CJS-loader suites) + typescript
       # (tests/ts-esm-loader.mjs, kept for older node legs; node >= 22.18
-      # uses native type stripping via tests/run-all.mjs). Peer deps
-      # (pi packages) are not needed by the pure node-level suites.
+      # uses native type stripping via tests/run-all.mjs) + the pi packages
+      # pinned to the tested 0.83.x line — the typecheck step needs their
+      # .d.ts, and they're peers of the published package, not prod deps.
       - run: npm ci --no-audit --no-fund --legacy-peer-deps
 
       # node tests/run-all.mjs — spawns every tests/*.test.mjs, picks the
