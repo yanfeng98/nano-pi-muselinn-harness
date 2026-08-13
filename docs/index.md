@@ -94,7 +94,14 @@ pi install npm:pi-muselinn-harness
 </div>
 </div>
 
-<h2><span data-l="en">New in 0.9.21</span><span data-l="zh">0.9.21 新功能</span></h2>
+<h2><span data-l="en">New in 0.9.22</span><span data-l="zh">0.9.22 新功能</span></h2>
+<div class="roadmap-grid">
+<div class="card reveal" markdown="1">
+### <span data-l="en">Type-layer hardening — full-package typecheck</span><span data-l="zh">类型层加固 — 全包类型检查</span>
+<span data-l="en">The package now ships <code>tsconfig.json</code> + <code>npm run typecheck</code> (strict, es2024) wired into CI, clearing 158 type errors against pi 0.83 — and the new checker surfaced real runtime bugs: <code>resources_discover</code> injected subagent skills through an unimported function (the ReferenceError was swallowed by <code>catch</code>, so skills were silently missing), and todo cleanup was bound to a <code>session_end</code> event that pi 0.83 never emits (now <code>session_shutdown</code>). Dead <code>usage</code> fields are gone from every command definition, vision-model detection uses pi's real <code>Model</code> type, and <code>notify(..., "success")</code> is typed via module augmentation.</span><span data-l="zh">本包现在自带 <code>tsconfig.json</code> + <code>npm run typecheck</code>（strict, es2024）并接入 CI，清除了针对 pi 0.83 的 158 条类型错误——新检查器还暴露了真实运行时缺陷：<code>resources_discover</code> 通过未导入的函数注入子代理技能（ReferenceError 被 <code>catch</code> 静默吞掉，技能一直缺失）、todo 清理绑定到 pi 0.83 从不触发的 <code>session_end</code> 事件（现已改为 <code>session_shutdown</code>）。所有命令定义中的死字段 <code>usage</code> 已删除，视觉模型检测改用 pi 的真实 <code>Model</code> 类型，<code>notify(..., "success")</code> 通过模块增强补齐类型。</span>
+</div>
+</div>
+<h2><span data-l="en">Previously — 0.9.21</span><span data-l="zh">历史版本 0.9.21</span></h2>
 <div class="roadmap-grid">
 <div class="card reveal" markdown="1">
 ### <span data-l="en">RPC approvals &amp; window-aware truncation</span><span data-l="zh">RPC 审批与窗口感知截断</span>

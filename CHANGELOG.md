@@ -2,7 +2,7 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
-## Unreleased
+## 0.9.22
 
 **Type-layer hardening — full-package `tsc` typecheck (first time):**
 
