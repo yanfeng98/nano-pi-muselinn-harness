@@ -294,6 +294,7 @@ Pure node-level unit tests, no model quota needed (27 suites, 800+ assertions):
 
 ```bash
 npm test                                        # all suites (node tests/run-all.mjs)
+npm run typecheck                               # full-package tsc (strict, es2024)
 ```
 
 or individually:

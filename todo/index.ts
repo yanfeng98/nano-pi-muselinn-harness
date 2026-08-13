@@ -379,7 +379,7 @@ export function registerTodoList(pi: any): void {
     if (!tasks) return [];
     return tasks
       .filter((t) => t.status === "running" || t.status === "pending")
-      .map((t) => t.task ?? t.description ?? "")
+      .map((t) => t.task ?? "")
       .filter(Boolean);
   });
   pi.on("tool_result", () => { refreshWidget(); });

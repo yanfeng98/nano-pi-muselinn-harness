@@ -55,6 +55,7 @@ import { registerTodoList, registerTodoReminders, bindTodoSession, clearTodoSess
 import { registerFetchUrl } from "./webfetch/index";
 import { phasesToMarkdown, markdownToPhases, applyOp, TodoPhase, TodoItem } from "./packages/core/todo/types";
 import { loadPlugins, injectPluginSessionStart, registerPluginCommand, getPluginSkillFiles } from "./plugin/index";
+import { listDiscoverableSkillFiles } from "./packages/core/skills";
 import { registerTui, setTuiBadgeProvider } from "./tui/index";
 import { agentPauseGate } from "./packages/core/pause/gate";
 import { registerPauseCommands } from "./pause/commands";
@@ -422,8 +423,8 @@ export default function (pi: ExtensionAPI) {
     try { agentLifecycle.reset(); } catch { /* ok */ }
   });
 
-  // ── session_end: clear todo state ──
-  pi.on("session_end", () => {
+  // ── session_shutdown: clear todo state ──
+  pi.on("session_shutdown", () => {
     try { clearTodoSession(); } catch { /* stale ctx */ }
   });
 
@@ -563,8 +564,9 @@ export default function (pi: ExtensionAPI) {
       goalManager.detectProviderLimitError(errorMsg);
     }
 
-    // Pause goal on user interrupt (Kimi Code-style)
-    if (event.signal?.aborted) {
+    // Pause goal on user interrupt (Kimi Code-style). TurnEndEvent carries no
+    // signal in pi 0.83 (types.d.ts:555-560); older pi may include it.
+    if ((event as { signal?: AbortSignal }).signal?.aborted) {
       goalManager.pauseOnInterrupt("User interrupted");
     }
   });
@@ -598,7 +600,7 @@ export default function (pi: ExtensionAPI) {
     // always available, no deadlock.
     await agentPauseGate.waitUntilResumed(undefined, "tool_call");
     const toolName = event.toolName || "";
-    const input = (event.input || event.args || {}) as Record<string, unknown>;
+    const input = (event.input ?? {}) as Record<string, unknown>;
 
     // Hooks: PreToolUse — Kimi Code runs hooks before permission checks.
     try {
@@ -803,8 +805,8 @@ export default function (pi: ExtensionAPI) {
         Type.Record(
           Type.String({ description: "Existing subagent agent_id" }),
           Type.String({ description: "Prompt to resume that subagent" }),
+          { description: "Map of existing subagent agent_id to prompt for resuming. Resumed before new item-based spawns." },
         ),
-        { description: "Map of existing subagent agent_id to prompt for resuming. Resumed before new item-based spawns." },
       ),
       model_tier: Type.Optional(
         StringEnum(["cheap", "balanced", "premium", "auto"] as const, {
@@ -818,8 +820,8 @@ export default function (pi: ExtensionAPI) {
         Type.Record(
           Type.String({ description: "Item index (0-based)" }),
           Type.String({ description: "Model name or alias for this item" }),
+          { description: "Per-item model overrides. Keys are item indices, values are model names/aliases." },
         ),
-        { description: "Per-item model overrides. Keys are item indices, values are model names/aliases." },
       ),
       max_concurrency: Type.Optional(Type.Number({ default: 5 })),
       run_in_background: Type.Optional(
@@ -854,8 +856,7 @@ export default function (pi: ExtensionAPI) {
       const defaultProvider = getDefaultProvider();
 
       // ── Runtime model selection ───────────────────────────────────────────
-      const available: Array<{ id: string; provider?: string; cost: { input: number } }> =
-        ctx.modelRegistry?.getAvailable() || [];
+      const available = ctx.modelRegistry?.getAvailable() || [];
 
       // Model alias map: convenience name → actual model ID
       // These are the REAL model IDs from the registry
@@ -865,10 +866,11 @@ export default function (pi: ExtensionAPI) {
         // User specified: support provider:model / provider/model, then fuzzy match
         const parsed = parseModelSpec(modelId);
         let candidates: any[];
-        if (parsed.provider) {
+        const parsedProvider = parsed.provider;
+        if (parsedProvider) {
           candidates = available.filter((m: any) =>
             m.id.toLowerCase() === parsed.modelId.toLowerCase() &&
-            m.provider?.toLowerCase() === parsed.provider.toLowerCase()
+            m.provider?.toLowerCase() === parsedProvider.toLowerCase()
           );
           if (candidates.length === 0) {
             candidates = available.filter((m: any) =>
@@ -886,7 +888,7 @@ export default function (pi: ExtensionAPI) {
         }
         if (candidates.length === 0) {
           // Never return undefined — pi reads result.content and crashes.
-          return { content: [{ type: "text", text: `No model matching "${modelId}" found. Available: ${available.map((m: any) => m.id).slice(0, 10).join(", ")}...` }] };
+          return { content: [{ type: "text", text: `No model matching "${modelId}" found. Available: ${available.map((m: any) => m.id).slice(0, 10).join(", ")}...` }], details: undefined };
         }
         const scored = candidates.map((m: any) => {
           let score = 0;
@@ -905,7 +907,7 @@ export default function (pi: ExtensionAPI) {
         );
       }
       if (!modelId) {
-        return { content: [{ type: "text", text: "No models available in registry." }] };
+        return { content: [{ type: "text", text: "No models available in registry." }], details: undefined };
       }
       const selectedModelObj = available.find((m: any) => m.id === modelId);
       const isVision = selectedModelObj?.input?.includes("image");
@@ -958,7 +960,7 @@ export default function (pi: ExtensionAPI) {
       }
 
             // ── Build tasks ──────────────────────────────────────────────────────
-      const tasks: import("./types").SubAgentTask[] = [];
+      const tasks: SubAgentTask[] = [];
 
       // Kimi Code-style: resumed subagents first, then item-based spawns
       const resumeIds = (params.resume_agent_ids || {}) as Record<string, string>;
@@ -1015,7 +1017,7 @@ export default function (pi: ExtensionAPI) {
       if (agentFileName) {
         agentProfile = agentFileService.getProfile(agentFileName);
         if (!agentProfile) {
-          return { content: [{ type: "text", text: `Agent profile "${agentFileName}" not found. Use agent_file_list to see available profiles.` }] };
+          return { content: [{ type: "text", text: `Agent profile "${agentFileName}" not found. Use agent_file_list to see available profiles.` }], details: undefined };
         }
         // Apply tool gating from agent profile to all tasks
         if (agentProfile.tools || agentProfile.disallowedTools) {
@@ -1027,7 +1029,7 @@ export default function (pi: ExtensionAPI) {
       }
 
       // Init swarm state ------------------------------------------------------
-      const state: import("./types").SwarmState = {
+      const state: SwarmState = {
         name: params.description,
         mode: "swarm",
         modelTier: tier,
@@ -1081,7 +1083,9 @@ export default function (pi: ExtensionAPI) {
 
       // Setup parent abort controller for cancel propagation
       setGlobalAbortController(new AbortController());
-      const unlinkGlobal = linkAbortSignal(signal, swarmState.globalAbortController!);
+      const unlinkGlobal = signal
+        ? linkAbortSignal(signal, swarmState.globalAbortController!)
+        : () => {};
 
       const theme = ctx.ui.theme;
       state.status = "running";
@@ -1145,7 +1149,7 @@ export default function (pi: ExtensionAPI) {
       // bounded by max_concurrency via the worker pool in runProgressive.
       try {
         await runProgressive(tasks, maxC, async (task) => {
-          if (signal.aborted || swarmState.currentSwarm === null) {
+          if (signal?.aborted || swarmState.currentSwarm === null) {
             task.status = "aborted";
             return;
           }
@@ -1183,10 +1187,10 @@ export default function (pi: ExtensionAPI) {
             .map((t) => t.item || t.task);
           setSavedSwarmState({
             name: state.name,
-            items: params.items,
+            items: params.items ?? [],
             modelTier: tier,
             subagentType: params.subagent_type as SubAgentType,
-            promptTemplate: params.prompt_template,
+            promptTemplate: params.prompt_template ?? "",
             maxConcurrency: maxC,
             completedItems,
           });
@@ -1216,7 +1220,7 @@ export default function (pi: ExtensionAPI) {
     renderCall(args, theme) {
       let text = `${theme.fg("toolTitle", theme.bold("swarm "))}`;
       text += `${theme.fg("accent", args.description)}`;
-      text += ` ${theme.fg("muted", `${args.subagent_type} × ${args.items.length}`)}`;
+      text += ` ${theme.fg("muted", `${args.subagent_type} × ${args.items?.length ?? 0}`)}`;
       return new Text(text, 0, 0);
     },
 
@@ -1294,8 +1298,7 @@ export default function (pi: ExtensionAPI) {
 
       const defaultModelId = getDefaultModel();
       const defaultProvider = getDefaultProvider();
-      const available: Array<{ id: string; provider?: string; cost: { input: number } }> =
-        ctx.modelRegistry?.getAvailable() || [];
+      const available = ctx.modelRegistry?.getAvailable() || [];
 
 
       // Smart model resolution (fully automatic - same as agent_swarm)
@@ -1304,11 +1307,12 @@ export default function (pi: ExtensionAPI) {
         // Parse provider:model format first
         const parsed = parseModelSpec(modelId);
         let candidates: any[];
-        if (parsed.provider) {
+        const parsedProvider = parsed.provider;
+        if (parsedProvider) {
           // Exact provider + model ID match
           candidates = available.filter((m: any) =>
             m.id.toLowerCase() === parsed.modelId.toLowerCase() &&
-            m.provider?.toLowerCase() === parsed.provider.toLowerCase()
+            m.provider?.toLowerCase() === parsedProvider.toLowerCase()
           );
           // Fallback: any provider with this model ID
           if (candidates.length === 0) {
@@ -1328,7 +1332,7 @@ export default function (pi: ExtensionAPI) {
         }
         if (candidates.length === 0) {
           // Never return undefined — pi reads result.content and crashes.
-          return { content: [{ type: "text", text: `No model matching "${modelId}" found.` }] };
+          return { content: [{ type: "text", text: `No model matching "${modelId}" found.` }], details: undefined };
         }
         const scored = candidates.map((m: any) => {
           let score = 0;
@@ -1347,7 +1351,7 @@ export default function (pi: ExtensionAPI) {
         );
       }
       if (!modelId) {
-        return { content: [{ type: "text", text: "No models available." }] };
+        return { content: [{ type: "text", text: "No models available." }], details: undefined };
       }
 
       // ── Agent profile resolution ──
@@ -1356,7 +1360,7 @@ export default function (pi: ExtensionAPI) {
       if (agentFileName) {
         agentProfile = agentFileService.getProfile(agentFileName);
         if (!agentProfile) {
-          return { content: [{ type: "text", text: `Agent profile "${agentFileName}" not found. Use agent_file_list to see available profiles.` }] };
+          return { content: [{ type: "text", text: `Agent profile "${agentFileName}" not found. Use agent_file_list to see available profiles.` }], details: undefined };
         }
         // Apply tool gating from agent profile
         if (agentProfile.tools || agentProfile.disallowedTools) {
@@ -1369,7 +1373,7 @@ export default function (pi: ExtensionAPI) {
 
       // No more scoring code below this point
 
-      const task: import("./types").SubAgentTask = {
+      const task: SubAgentTask = {
         id: "001",
         agent: params.subagent_type,
         type: params.subagent_type as SubAgentType,
@@ -1381,10 +1385,12 @@ export default function (pi: ExtensionAPI) {
         usage: { input: 0, output: 0, cost: 0 },
         outputLines: [],
         progressPercent: 0,
+        toolCalls: 0,
+        estimatedTotalCalls: 10,
         ticks: 0,
       };
 
-      const state: import("./types").SwarmState = {
+      const state: SwarmState = {
         name: params.description,
         mode: "agent",
         modelTier: tier,
@@ -1436,7 +1442,7 @@ export default function (pi: ExtensionAPI) {
       const update = () => updateWidget();
 
       try {
-        await runSubAgent(task, { ...ctx, sessionDir: mainSessionDir }, signal, update, agentProfile);
+        await runSubAgent(task, { ...ctx, sessionDir: mainSessionDir }, signal ?? new AbortController().signal, update, agentProfile);
       } finally {
         // Clean up refresh timer
         if (refreshTimer) {
@@ -1536,7 +1542,7 @@ function registerAgentFileTools(pi: ExtensionAPI): void {
     async execute(_toolCallId, _params, _signal, _onUpdate, _ctx) {
       const profiles = agentFileService.getAllProfiles();
       if (profiles.length === 0) {
-        return { content: [{ type: "text", text: "No custom agent profiles found." }] };
+        return { content: [{ type: "text", text: "No custom agent profiles found." }], details: undefined };
       }
       const lines = profiles.map((p) => {
         const tools = p.tools ? ` tools=[${p.tools.join(",")}]` : "";
@@ -1544,7 +1550,7 @@ function registerAgentFileTools(pi: ExtensionAPI): void {
         const subagents = p.subagents ? ` subagents=[${p.subagents.join(",")}]` : "";
         return `  ${p.name} — ${p.description}${tools}${disallowed}${subagents} (${p.source})`;
       });
-      return { content: [{ type: "text", text: `Agent profiles:\n${lines.join("\n")}` }] };
+      return { content: [{ type: "text", text: `Agent profiles:\n${lines.join("\n")}` }], details: undefined };
     },
   });
 
@@ -1560,7 +1566,7 @@ function registerAgentFileTools(pi: ExtensionAPI): void {
     async execute(_toolCallId, params, _signal, _onUpdate, _ctx) {
       const profile = agentFileService.getProfile(params.name as string);
       if (!profile) {
-        return { content: [{ type: "text", text: `Agent profile "${params.name}" not found.` }] };
+        return { content: [{ type: "text", text: `Agent profile "${params.name}" not found.` }], details: undefined };
       }
       const tools = profile.tools ? `\n  Allowed tools: ${profile.tools.join(", ")}` : "";
       const disallowed = profile.disallowedTools ? `\n  Disallowed tools: ${profile.disallowedTools.join(", ")}` : "";
@@ -1580,6 +1586,7 @@ function registerAgentFileTools(pi: ExtensionAPI): void {
             `\nSystem prompt:\n${"─".repeat(40)}\n${profile.systemPrompt.slice(0, 1000)}`,
           ].join(""),
         }],
+        details: undefined,
       };
     },
   });

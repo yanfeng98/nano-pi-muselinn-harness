@@ -313,7 +313,6 @@ export function registerTui(pi: ExtensionAPI): void {
 
   pi.registerCommand("tui", {
     description: "Switch editor chrome (Kimi Code-style boxed editor)",
-    usage: "/tui [style <plain|boxed|compact> | shimmer <classic|kitt|disabled> | timing]",
     getArgumentCompletions: (prefix: string) => tuiArgumentCompletions(prefix),
     handler: async (args: string, ctx: any) => {
       if (!ctx?.hasUI) return;

@@ -30,3 +30,7 @@ jobs:
       # node tests/run-all.mjs — spawns every tests/*.test.mjs, picks the
       # right TS loading strategy for the node version.
       - run: npm test
+
+      # tsc over the whole package — catches type-layer breakage the
+      # runtime JIT tests can't see (stripped annotations, peer drift).
+      - run: npm run typecheck

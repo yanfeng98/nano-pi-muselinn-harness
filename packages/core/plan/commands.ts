@@ -43,7 +43,6 @@ export function registerPlanCommands(pi: any, planManager: PlanManager): void {
   // ── /plan command ──
   pi.registerCommand("plan", {
     description: "Toggle plan mode on/off",
-    usage: "/plan [on|off|clear]",
     getArgumentCompletions: (prefix: string) => planArgumentCompletions(prefix),
     handler: async (args: string, ctx: any) => {
       const arg = (args || "").trim().toLowerCase();

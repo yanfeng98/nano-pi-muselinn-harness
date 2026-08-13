@@ -14,7 +14,6 @@ export function registerGoalCommands(pi: any, goalManager: GoalManager): void {
   // ── /goal command ──
   pi.registerCommand("goal", {
     description: "Manage the current goal (Kimi Code-style)",
-    usage: "/goal <objective> | /goal pause | /goal resume | /goal cancel | /goal replace <new> | /goal next | /goal status | /goal budget <number> <unit>",
     getArgumentCompletions: (prefix: string) => goalArgumentCompletions(prefix),
     handler: async (args: string, ctx: any) => {
       const subcommand = args.trim().split(/\s+/)[0]?.toLowerCase() || "";
@@ -183,7 +182,6 @@ export function registerGoalCommands(pi: any, goalManager: GoalManager): void {
   // ── /write-goal command ──
   pi.registerCommand("write-goal", {
     description: "Turn a rough intention into a well-specified /goal objective",
-    usage: "/write-goal <your rough intention>",
     handler: async (args: string, ctx: any) => {
       if (!args.trim()) {
         ctx.ui.notify("Usage: /write-goal <your rough intention>", "error");

@@ -209,13 +209,17 @@ describe("tui adapter: working-state render path", () => {
     }
   });
 
-  test("/tui command exposes shimmer subcommand with usage", () => {
+  test("/tui command status output exposes shimmer subcommand", async () => {
     const m = makeMocks();
+    const notified = [];
+    m.ui.notify = (msg) => { notified.push(msg); };
     tuiMod.registerTui(m.pi);
     const tuiCmd = m.commands.find((c) => c.name === "tui");
     assert.ok(tuiCmd, "/tui registered");
-    assert.ok(tuiCmd.def.usage.includes("shimmer"), "usage mentions shimmer");
-    assert.ok(tuiCmd.def.usage.includes("style"), "usage mentions style");
+    await tuiCmd.def.handler("", m.ctx);
+    const statusText = notified.join("\n");
+    assert.ok(statusText.includes("shimmer"), "status output mentions shimmer");
+    assert.ok(statusText.includes("style"), "status output mentions style");
   });
 
   test("boxed editor keeps breathing room between │ bars and text/cursor", () => {

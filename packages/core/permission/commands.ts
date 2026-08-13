@@ -9,7 +9,6 @@ import { modeArgumentCompletions } from '../completions.ts';
 export function registerPermissionCommands(pi: any, permissionManager: PermissionManager): void {
   pi.registerCommand("mode", {
     description: "Switch permission mode (auto/yolo/manual)",
-    usage: "/mode [auto|yolo|manual]",
     getArgumentCompletions: (prefix: string) => modeArgumentCompletions(prefix),
     handler: async (args: string, ctx: any) => {
       const arg = (args || "").trim().toLowerCase();

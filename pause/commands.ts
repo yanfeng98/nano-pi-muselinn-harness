@@ -26,7 +26,6 @@ export function registerPauseCommands(pi: ExtensionAPI): void {
   // ── /pause — freeze all agents at the next safe boundary ──
   pi.registerCommand("pause", {
     description: "Freeze all agents at the next safe boundary",
-    usage: "/pause",
     handler: async (_args, ctx) => {
       const ok = await runPauseScreen(ctx);
       if (!ok) {
@@ -38,9 +37,8 @@ export function registerPauseCommands(pi: ExtensionAPI): void {
   // ── /steer — send a message to a running subagent ──
   pi.registerCommand("steer", {
     description: "Send a message to a running subagent",
-    usage: "/steer <taskId> <message>",
     getArgumentCompletions: (prefix: string): AutocompleteItem[] | null =>
-      runningTaskIds().filter((id) => id.startsWith(prefix)).map((id) => ({ value: id })),
+      runningTaskIds().filter((id) => id.startsWith(prefix)).map((id) => ({ value: id, label: id })),
     handler: async (args, ctx) => {
       const m = (args ?? "").trim().match(/^(\S+)\s+([\s\S]+)$/);
       if (!m) {

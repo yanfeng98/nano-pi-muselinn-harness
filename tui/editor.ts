@@ -32,7 +32,6 @@ export class MuselinnEditor extends CustomEditor {
   private readonly chromeStyle: EditorStyle;
   private readonly slots: EditorSlots;
   private readonly timing: RenderTiming | null;
-  private readonly tui: TUI;
   private readonly onRender: (() => void) | null;
   private autocompleteWasShowing = false;
 
@@ -52,7 +51,6 @@ export class MuselinnEditor extends CustomEditor {
     // "│<text>│" with the cursor touching the border. paddingX=2 yields
     // "│ <text> │".
     super(tui, theme, keybindings, { paddingX: style === "boxed" ? 2 : 0 });
-    this.tui = tui;
     this.chromeStyle = style;
     this.slots = slots;
     this.timing = timing;

@@ -662,8 +662,9 @@ export class GoalManager {
 
   /**
    * Get status color for Goal Badge (for theme integration).
+   * Return type is the pi-tui ThemeColor subset used by the badge.
    */
-  getFooterBadgeColor(): string {
+  getFooterBadgeColor(): "muted" | "accent" | "warning" | "error" {
     const g = goalState.current;
     if (!g) return "muted";
     switch (g.status) {

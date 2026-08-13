@@ -2,6 +2,17 @@
 
 All notable changes to pi-muselinn-harness, in reverse chronological order.
 
+## Unreleased
+
+**Type-layer hardening — full-package `tsc` typecheck (first time):**
+
+- Added `tsconfig.json` (es2024, bundler resolution, strict), `npm run typecheck`, and a typecheck step in CI. The runtime-JIT test strategy (node type stripping) erased all annotations, so type breakage was invisible to the suite — 158 strict errors cleared.
+- Fixed broken type references: root `index.ts` referenced a non-existent `./types` module for `SubAgentTask`/`SwarmState` (4 sites) — now the real `packages/core/swarm/types` import; `permission/config.ts` was missing the `PermissionMode` import; `todo/index.ts` read a non-existent `SubAgentTask.description` (dead branch removed).
+- `swarm/subagent.ts` `ResourceLoader` shim was missing `getSystemPromptSource`/`getAppendSystemPromptSources` (pi 0.83 requires them) — added.
+- Removed dead `usage` fields from every `registerCommand` — pi 0.83 never reads `cmd.usage` (verified against dist runtime).
+- Fixed silently-dead behavior: `resources_discover` skill injection called an unimported `listDiscoverableSkillFiles` (ReferenceError swallowed by `catch` — subagent skills silently missing); `session_end` does not exist in pi 0.83's event table (todo cleanup now bound to `session_shutdown`); single-agent `SubAgentTask` literals were missing required `toolCalls`/`estimatedTotalCalls`.
+- Type-gap closures: `notify(..., "success")` is runtime-supported but absent from pi's type (module augmentation in `notify-augment.d.ts`); `AutocompleteItem` imported from `@earendil-works/pi-tui` (pi-coding-agent doesn't re-export it) with the required `label`; `Type.Optional(record, { description })` dropped its 2nd arg (description moved into `Type.Record` options); `createAgentSession` no longer passes the unsupported `modelRegistry` option; model reads now use pi's real `Model` type (vision detection via `model.input` type-safe); `TurnEndEvent` signal access guarded for multi-version compat.
+
 ## 0.9.21
 
 **Window-aware tool-result spill (issue #2):**

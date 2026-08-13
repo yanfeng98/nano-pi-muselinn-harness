@@ -4,7 +4,7 @@
 
 import * as fs from "node:fs";
 import * as path from "node:path";
-import type { ResourceLoader } from "@earendil-works/pi-coding-agent";
+import type { ExtensionContext, ResourceLoader } from "@earendil-works/pi-coding-agent";
 import { goalManager } from "../packages/core/goal";
 import { permissionManager } from "../packages/core/permission";
 import { wrapWithPermissionGate } from "../packages/core/swarm/wrap-tools";
@@ -173,7 +173,9 @@ export function createSubagentResourceLoader(ctx: {
     getThemes: () => ({ themes: [], diagnostics: [] }),
     getAgentsFiles: () => ({ agentsFiles: [] }),
     getSystemPrompt: () => enrichedPrompt,
+    getSystemPromptSource: () => undefined,
     getAppendSystemPrompt: () => [],
+    getAppendSystemPromptSources: () => [],
     extendResources: () => {},
     reload: async () => {},
   };
@@ -262,10 +264,7 @@ export async function retryOnRateLimit<T>(
 
 export async function runSubAgent(
   task: SubAgentTask,
-  ctx: {
-    cwd: string;
-    getSystemPrompt?: () => string | undefined;
-    modelRegistry: { getAvailable(): Array<{ id: string }>; runtime?: any };
+  ctx: Pick<ExtensionContext, "cwd" | "getSystemPrompt" | "modelRegistry"> & {
     /** Session dir for transcript wire.jsonl 落盘 (agents/<taskId>/wire.jsonl) */
     sessionDir?: string;
   },

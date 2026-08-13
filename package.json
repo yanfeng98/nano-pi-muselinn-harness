@@ -6,6 +6,7 @@
   "main": "index.ts",
   "scripts": {
     "test": "node tests/run-all.mjs",
+    "typecheck": "tsc -p tsconfig.json",
     "version-patch": "npm version patch --no-git-tag-version"
   },
   "author": "MuseLinn",
@@ -18,6 +19,7 @@
   "files": [
     "index.ts",
     "state.ts",
+    "notify-augment.d.ts",
     "packages/",
     "ask/",
     "todo/",

@@ -274,6 +274,7 @@ pi-muselinn-harness/
 
 ```bash
 npm test                                        # 全部套件（node tests/run-all.mjs）
+npm run typecheck                               # 全包 tsc 类型检查（strict, es2024）
 ```
 
 或逐个运行：

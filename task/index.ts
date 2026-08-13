@@ -471,7 +471,6 @@ async function runBackgroundSession(
     const result = await createAgentSession({
       sessionManager: SessionManager.inMemory(),
       model,
-      modelRegistry: { getAvailable: () => [model] } as any,
       tools,
       resourceLoader,
     });
@@ -491,7 +490,7 @@ async function runBackgroundSession(
         if (tl) appendTranscriptLine(transcriptPathFor(sessionDir, taskId), tl);
       }
     });
-    backgroundManager.setSession(taskId, session, unsub);
+    if (unsub) backgroundManager.setSession(taskId, session, unsub);
 
     // (1) Manual abort bridging — session.prompt does not accept { signal };
     // chain parent signal -> session.abort() so cancellation actually lands.

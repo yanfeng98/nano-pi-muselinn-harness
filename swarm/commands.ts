@@ -2,7 +2,7 @@
 // Swarm Mode — Slash Commands
 // ============================================================
 
-import type { AutocompleteItem } from "@earendil-works/pi-coding-agent";
+import type { AutocompleteItem } from "@earendil-works/pi-tui";
 import type { ExtensionAPI, ExtensionContext } from "@earendil-works/pi-coding-agent";
 import {
   swarmState,
@@ -145,7 +145,6 @@ export function registerCommands(pi: ExtensionAPI): void {
   // ============================================================
   pi.registerCommand("swarm", {
     description: "Toggle swarm mode or run one task in swarm mode",
-    usage: "/swarm [on|off|status] | <task>",
     getArgumentCompletions: (prefix: string): AutocompleteItem[] | null =>
       swarmArgumentCompletions(prefix),
     handler: async (args, ctx) => {
